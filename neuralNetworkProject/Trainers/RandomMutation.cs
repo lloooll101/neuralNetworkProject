@@ -40,7 +40,7 @@ namespace Trainers.RandomMutation
 
                 for (int j = 0; j < networks[i].inputWeights.RowCount; j++)
                 {
-                    for (int k = 0; j < networks[i].inputWeights.ColumnCount; k++)
+                    for (int k = 0; k < networks[i].inputWeights.ColumnCount; k++)
                     {
                         networks[i].inputWeights[j, k] = parent.inputWeights[j, k] + (float)distribution.Sample();
                     }

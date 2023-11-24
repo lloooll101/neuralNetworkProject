@@ -61,7 +61,7 @@
                 float collideX = ball.X + ball.Xvel * collideSubtick;
 
                 //Check if the paddle was in the path of the ball
-                if (collideX < paddle.X + paddle.width && collideX > paddle.X - paddle.width)
+                if ((collideX < paddle.X + paddle.width) && (collideX > paddle.X - paddle.width))
                 {
                     //Increment score
                     score += 1;
@@ -107,9 +107,6 @@
                 ball.Y = Ysize - (ball.Y - Ysize);
                 ball.Yvel *= -1;
             }
-
-            //Return false if game over
-            //Sets score based on bounces, movements, and distance when dropped
 
             return true;
         }
