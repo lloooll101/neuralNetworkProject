@@ -9,6 +9,7 @@ using Project.Network;
 using Games.Pong;
 using Project.Network.JSONSerialization;
 using Trainers.RandomGeneration;
+using Trainers.RandomMutation;
 
 namespace Project
 {
@@ -20,7 +21,7 @@ namespace Project
             int generations = 25;
             int netsPerGen = 25;
 
-            int ticks = 1000;
+            int ticks = 2000;
 
             int layers = 2;
             int nodesPerLayer = 3;
@@ -32,7 +33,7 @@ namespace Project
             //Get the current project and append the current time
             //Ignore the warnings, it's fine
             string docPath = Environment.CurrentDirectory;
-            docPath = Path.Combine(docPath, DateTime.Now.ToString("MM-dd-yy hh-mm-ss"));
+            docPath = Path.Combine(docPath, DateTime.Now.ToString("MM-dd-yy HH-mm-ss"));
 
             //Create the directory
             Directory.CreateDirectory(docPath);
@@ -48,7 +49,7 @@ namespace Project
             }
 
             //Create the trainer class
-            RandomTrainer trainer = new RandomTrainer();
+            MutationTrainer trainer = new MutationTrainer();
 
             //Create the list of angles to test
             float[] angles = new float[numberOfAngles];
@@ -75,7 +76,7 @@ namespace Project
                     scores[j] = runNetwork(networks[j], angles, ticks);
                 }
 
-                networks = trainer.generateNextGen(networks, scores, 0.1f);
+                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
 
                 //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
                 Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
