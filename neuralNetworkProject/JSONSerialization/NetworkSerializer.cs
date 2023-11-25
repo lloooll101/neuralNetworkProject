@@ -76,7 +76,7 @@ namespace Project.Network.JSONSerialization
         }
 
         private static Matrix<float> ReinflateMatrix(float[] floats, int rows, int columns) {
-           return Matrix.Build.Dense(rows, columns, floats).Transpose();
+           return Matrix.Build.Dense(columns, rows, floats).Transpose();
         }
         private static List<float[]> ReinflateList(float[] floats, int entries, int floatsPerEntry)
         {

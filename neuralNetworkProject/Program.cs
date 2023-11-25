@@ -83,8 +83,14 @@ namespace Project
 
             //genLogs.Flush();
             //print out best network
-            Console.WriteLine(NetworkSerializer.JSONSerializeNeuralNetwork(networks[0]));
+            string bestNetworkJSON = NetworkSerializer.JSONSerializeNeuralNetwork(networks[0]);
+            Console.WriteLine(bestNetworkJSON);
             Console.WriteLine(docPath);
+
+            //deserialize and run network
+            NeuralNetwork deserialized = NetworkSerializer.JSONDeserializeNeuralNetwork(bestNetworkJSON);
+            float des_score = runNetwork(deserialized, angles, ticks);
+            Console.WriteLine("Deserialized network score: " +  des_score);
         }
 
         public static float runNetwork(NeuralNetwork network, float[] angles, int ticks)
