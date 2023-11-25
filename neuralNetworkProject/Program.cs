@@ -7,6 +7,8 @@ using System.Threading;
 using Project.Network;
 
 using Games.Pong;
+using Project.Network.JSONSerialization;
+using Trainers.RandomGeneration;
 using Trainers.RandomMutation;
 
 namespace Project
@@ -16,8 +18,8 @@ namespace Project
         static void Main(string[] args)
         {
             //Settings
-            int generations = 50;
-            int netsPerGen = 50;
+            int generations = 25;
+            int netsPerGen = 25;
 
             int ticks = 2000;
 
@@ -26,7 +28,7 @@ namespace Project
             int inputs = 5;
             int outputs = 3;
 
-            int numberOfAngles = 60;
+            int numberOfAngles = 30;
 
             //Get the current project and append the current time
             //Ignore the warnings, it's fine
@@ -37,7 +39,7 @@ namespace Project
             Directory.CreateDirectory(docPath);
 
             //Create the generation logger
-            StreamWriter genLogs = new StreamWriter(Path.Combine(docPath, "genLogs.txt"));
+            //StreamWriter genLogs = new StreamWriter(Path.Combine(docPath, "genLogs.txt"));
 
             //Create and populate the array of networks
             NeuralNetwork[] networks = new NeuralNetwork[netsPerGen];
@@ -70,18 +72,26 @@ namespace Project
                     string networkPath = Path.Combine(genPath, "network-" + j);
                     Directory.CreateDirectory(networkPath);
 
-                    scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
+                    //scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
+                    scores[j] = runNetwork(networks[j], angles, ticks);
                 }
 
                 networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
 
-                genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+                //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
                 Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
             }
 
-            genLogs.Flush();
-
+            //genLogs.Flush();
+            //print out best network
+            string bestNetworkJSON = NetworkSerializer.JSONSerializeNeuralNetwork(networks[0]);
+            Console.WriteLine(bestNetworkJSON);
             Console.WriteLine(docPath);
+
+            //deserialize and run network
+            NeuralNetwork deserialized = NetworkSerializer.JSONDeserializeNeuralNetwork(bestNetworkJSON);
+            float des_score = runNetwork(deserialized, angles, ticks);
+            Console.WriteLine("Deserialized network score: " +  des_score);
         }
 
         public static float runNetwork(NeuralNetwork network, float[] angles, int ticks)
