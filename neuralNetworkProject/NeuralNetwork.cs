@@ -3,7 +3,7 @@ using MathNet.Numerics.Distributions;
 
 namespace Project.Network
 {
-    class NeuralNetwork
+    public class NeuralNetwork
     {
         public Matrix<float> inputWeights;
 
