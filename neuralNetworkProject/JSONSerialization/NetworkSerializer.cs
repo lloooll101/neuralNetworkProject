@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Single;
 
 namespace Project.Network.JSONSerialization
 {
@@ -43,6 +45,53 @@ namespace Project.Network.JSONSerialization
 
     public class NetworkSerializer
     {
+        private static float[] FlattenMatrixRowWise(Matrix<float> matrix)
+        {
+            int rows = matrix.RowCount;
+            int cols = matrix.ColumnCount;
+            float[] arr = new float[rows * cols];
+
+            for(int i = 0; i < rows; i++) {
+                for(int j = 0; j < cols; j++)
+                {
+                    arr[i * cols + j] = matrix.At(i, j);
+                }
+            }
+            return arr;
+        }
+        private static float[] FlattenListRowWise(List<float[]> matrix)
+        {
+            int rows = matrix.Count;
+            int cols = rows > 0 ? matrix.ElementAt(0).Length : 0;
+            float[] arr = new float[rows * cols];
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    arr[i * cols + j] = matrix[i][j];
+                }
+            }
+            return arr;
+        }
+
+        private static Matrix<float> ReinflateMatrix(float[] floats, int rows, int columns) {
+           return Matrix.Build.Dense(rows, columns, floats).Transpose();
+        }
+        private static List<float[]> ReinflateList(float[] floats, int entries, int floatsPerEntry)
+        {
+            List<float[]> reinflated = new List<float[]>();
+            for(int i = 0; i < entries; i++)
+            {
+                float[] f = new float[floatsPerEntry];
+                for(int j = 0; j < floatsPerEntry; j++)
+                {
+                    f[j] = floats[i*floatsPerEntry + j];
+                }
+                reinflated.Add(f);
+            }
+            return reinflated;
+        }
 
         public static string JSONSerializeNeuralNetwork(NeuralNetwork network)
         {
@@ -64,71 +113,97 @@ namespace Project.Network.JSONSerialization
              * the metadata.
             */
             NeuralNetworkJSONType.Input inp = new NeuralNetworkJSONType.Input();
-            int inputWeightsCount = network.inputWeights.Enumerate().Count();
-            inp.inputWeights = new float[inputWeightsCount];
-            int idx = 0;
-            foreach (float value in network.inputWeights.Enumerate())
-            {
-                inp.inputWeights[idx] = value;
-                idx++;
-            }
+            inp.inputWeights = FlattenMatrixRowWise(network.inputWeights);
             jsonType.inputWeights = inp;
+
             //network layers values
             NeuralNetworkJSONType.NetworkLayers nl = new NeuralNetworkJSONType.NetworkLayers();
             int weightLayers = network.networkWeights.Length;
-            int weightsPerLayer = network.networkWeights.Length > 0 ? network.networkWeights[0].Enumerate().Count() : 0;
             int biasesLayers = network.networkBiases.Length;
-            int biasesPerLayer = network.networkBiases.Length > 0 ? network.networkBiases[0].Enumerate().Count() : 0 ;
-            nl.networkWeights = new float[weightLayers * weightsPerLayer];
-            nl.networkBiases = new float[biasesLayers * biasesPerLayer];
             //weights first
+            List<float[]> networkWeightsList = new List<float[]>();
             for (int i = 0; i < weightLayers; i++)
             {
-                idx = 0;
-                foreach (float value in network.networkWeights[i].Enumerate())
-                {
-                    nl.networkWeights[i*weightsPerLayer + idx] = value;
-                    idx++;
-                }
+                networkWeightsList.Add(FlattenMatrixRowWise(network.networkWeights[i]));
             }
+            nl.networkWeights = FlattenListRowWise(networkWeightsList);
             //biases
-            for(int i = 0; i < biasesLayers; i++)
+            List<float[]> networkBiasesList = new List<float[]>();
+            for (int i = 0; i < biasesLayers; i++)
             {
-                idx = 0;
-                foreach (float value in network.networkBiases[i].Enumerate())
-                {
-                    nl.networkBiases[i*biasesPerLayer + idx] = value; 
-                    idx++;
-                }
+                networkBiasesList.Add(network.networkBiases[i].ToArray());
             }
+            nl.networkBiases = FlattenListRowWise(networkBiasesList);
             jsonType.networkLayers = nl;
 
             //output values
             NeuralNetworkJSONType.Output outp = new NeuralNetworkJSONType.Output();
-            int outputWeightsCount = network.outputWeights.Enumerate().Count();
-            int outputBiasesCount = network.outputBiases.Enumerate().Count();
-
-            outp.outputWeights = new float[outputWeightsCount];
-            outp.outputBiases = new float[outputBiasesCount];
 
             //weights
-            idx = 0;
-            foreach (float value in network.outputWeights.Enumerate())
-            {
-                outp.outputWeights[idx] = value;
-                idx++;
-            }
+            outp.outputWeights = FlattenMatrixRowWise(network.outputWeights);
             //biases
-            idx = 0;
-            foreach (float value in network.outputBiases.Enumerate())
-            {
-                outp.outputBiases[idx] = value;
-                idx++;
-            }
+            outp.outputBiases = network.outputBiases.ToArray();
+
             jsonType.outputWeights = outp;
 
             var options = new JsonSerializerOptions { WriteIndented = true };
             return JsonSerializer.Serialize(jsonType, options);
+        }
+        public static NeuralNetwork JSONDeserializeNeuralNetwork(string json)
+        {
+            NeuralNetworkJSONType? deserialized = JsonSerializer.Deserialize<NeuralNetworkJSONType>(json);
+            if (deserialized == null)
+            {
+                throw new Exception("Could not serialize JSON into a Neural network");
+            }
+
+            NeuralNetwork network = new NeuralNetwork(
+                deserialized.metadata.layers,
+                deserialized.metadata.nodesPerLayer,
+                deserialized.metadata.inputs,
+                deserialized.metadata.outputs
+            );
+            //convert input weights
+            network.inputWeights = ReinflateMatrix(
+                deserialized.inputWeights.inputWeights,
+                deserialized.metadata.nodesPerLayer,
+                deserialized.metadata.inputs
+            );
+
+            //convert network values
+            List<float[]> networkWeightsList = ReinflateList(
+                deserialized.networkLayers.networkWeights,
+                deserialized.metadata.layers - 1,
+                deserialized.metadata.nodesPerLayer * deserialized.metadata.nodesPerLayer
+            );
+            List<float[]> networkBiasesList = ReinflateList(
+                deserialized.networkLayers.networkBiases,
+                deserialized.metadata.layers,
+                deserialized.metadata.nodesPerLayer
+            );
+
+            for ( int i = 0; i < networkWeightsList.Count; i++)
+            {
+                network.networkWeights[i] = ReinflateMatrix(
+                    networkWeightsList[i],
+                    deserialized.metadata.nodesPerLayer,
+                    deserialized.metadata.nodesPerLayer
+                );
+            }
+            for (int i = 0; i < networkBiasesList.Count; i++)
+            {
+                network.networkBiases[i] = Vector<float>.Build.Dense(networkBiasesList[i]);
+            }
+
+            //convert output
+            network.outputWeights = ReinflateMatrix(
+                deserialized.outputWeights.outputWeights,
+                deserialized.metadata.outputs,
+                deserialized.metadata.nodesPerLayer
+            );
+            network.outputBiases = Vector<float>.Build.Dense(deserialized.outputWeights.outputBiases);
+
+            return network;
         }
     }
 
