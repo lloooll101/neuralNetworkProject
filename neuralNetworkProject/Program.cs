@@ -18,8 +18,8 @@ namespace Project
         static void Main(string[] args)
         {
             //Settings
-            int generations = 2;
-            int netsPerGen = 2;
+            int generations = 25;
+            int netsPerGen = 25;
 
             int ticks = 2000;
 
@@ -71,15 +71,31 @@ namespace Project
                     string networkPath = Path.Combine(genPath, "network-" + j);
                     Directory.CreateDirectory(networkPath);
 
-                    scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    //scores[j] = runNetwork(networks[j], angles, ticks);
+                    //scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
+                    scores[j] = runNetwork(networks[j], angles, ticks);
                 }
-
-                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
 
                 genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
                 Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+
+                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
+
+            //Convert the top network to a JSON string and output it
+            string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
+            Console.WriteLine(networkAsString);
+
+            //Create a new network from the imported JSON
+            //This is curently used to test the import function
+            NeuralNetwork importedNetwork = NetworkConverter.JsonToNetwork(networkAsString);
+
+            //Run the imported network to compare the score
+            Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
+
+            //Output the document path for ease of navigation
+            //Also open up the output folder
+            Console.WriteLine(docPath);
+            Process.Start("explorer.exe", docPath);
 
             genLogs.Flush();
         }
