@@ -47,12 +47,10 @@
             if (action == "left")
             {
                 paddle.X -= 3;
-                score -= 0.005f;
             }
             else if (action == "right")
             {
                 paddle.X += 3;
-                score -= 0.005f;
             }
 
             //Check to see if the ball needs to be checked for collision

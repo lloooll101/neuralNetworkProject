@@ -28,10 +28,9 @@ namespace Project
             int inputs = 5;
             int outputs = 3;
 
-            int numberOfAngles = 30;
+            int numberOfAngles = 60;
 
-            //Get the current project and append the current time
-            //Ignore the warnings, it's fine
+            //Get the current project and append the current times
             string docPath = Environment.CurrentDirectory;
             docPath = Path.Combine(docPath, DateTime.Now.ToString("MM-dd-yy HH-mm-ss"));
 
@@ -39,7 +38,7 @@ namespace Project
             Directory.CreateDirectory(docPath);
 
             //Create the generation logger
-            //StreamWriter genLogs = new StreamWriter(Path.Combine(docPath, "genLogs.txt"));
+            StreamWriter genLogs = new StreamWriter(Path.Combine(docPath, "genLogs.txt"));
 
             //Create and populate the array of networks
             NeuralNetwork[] networks = new NeuralNetwork[netsPerGen];
@@ -76,24 +75,32 @@ namespace Project
                     scores[j] = runNetwork(networks[j], angles, ticks);
                 }
 
-                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
-
-                //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+                genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
                 Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+
+                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
 
-            //genLogs.Flush();
-            //print out best network
-            string bestNetworkJSON = NetworkSerializer.JSONSerializeNeuralNetwork(networks[0]);
-            Console.WriteLine(bestNetworkJSON);
-            Console.WriteLine(docPath);
+            //Convert the top network to a JSON string and output it
+            string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
+            Console.WriteLine(networkAsString);
 
-            //deserialize and run network
-            NeuralNetwork deserialized = NetworkSerializer.JSONDeserializeNeuralNetwork(bestNetworkJSON);
-            float des_score = runNetwork(deserialized, angles, ticks);
-            Console.WriteLine("Deserialized network score: " +  des_score);
+            //Create a new network from the imported JSON
+            //This is curently used to test the import function
+            NeuralNetwork importedNetwork = NetworkConverter.JsonToNetwork(networkAsString);
+
+            //Run the imported network to compare the score
+            Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
+
+            //Output the document path for ease of navigation
+            //Also open up the output folder
+            Console.WriteLine(docPath);
+            Process.Start("explorer.exe", docPath);
+
+            genLogs.Flush();
         }
 
+        //Run the network against the set of angles, returning the score
         public static float runNetwork(NeuralNetwork network, float[] angles, int ticks)
         {
             //Keeps track of the total score of the network
@@ -101,7 +108,7 @@ namespace Project
 
             for (int i = 0; i < angles.Length; i++)
             {
-                Pong pongGame = new Pong(500, 500, 1, angles[i]);
+                Pong pongGame = new Pong(500, 500, 5, angles[i]);
 
                 for (int j = 0; j < ticks; j++)
                 {
@@ -142,6 +149,7 @@ namespace Project
             return score;
         }
 
+        //Run the network, logging every run
         public static float runNetwork(NeuralNetwork network, float[] angles, int ticks, string path)
         {
             StreamWriter networkLog = new StreamWriter(Path.Combine(path, "networkLog.txt"));
