@@ -21,7 +21,7 @@ namespace Trainers.RandomMutation
             ContinuousUniform distribution = new ContinuousUniform(-mutationRate, mutationRate);
 
             //Calcuate how many networks should survive, and store those networks
-            int survivingNum = (int)Math.Floor(networks.Length * percentile);
+            int survivingNum = Math.Max((int)Math.Floor(networks.Length * percentile), 1);
 
             NeuralNetwork[] survivingNetworks = new NeuralNetwork[survivingNum];
             float[] survivingScores = new float[survivingNum];

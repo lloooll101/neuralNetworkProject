@@ -1,211 +1,96 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.Json;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Single;
+﻿using MathNet.Numerics.LinearAlgebra;
+using Newtonsoft.Json;
 
 namespace Project.Network.JSONSerialization
 {
-    internal class NeuralNetworkJSONType
+    internal class intermediateNetwork
     {
-        public struct Metadata
+        public float[,] inputWeights;
+
+        public float[][,] networkWeights;
+        public float[][] networkBiases;
+
+        public float[,] outputWeights;
+        public float[] outputBiases;
+
+        public int layers;
+        public int nodesPerLayer;
+        public int inputs;
+        public int outputs;
+
+        public string ID = "";
+
+        public intermediateNetwork(NeuralNetwork network)
         {
-            public int layers { get; set; }
-            public int nodesPerLayer { get; set; }
-            public int inputs { get; set; }
-            public int outputs { get; set; }
+            this.inputWeights = network.inputWeights.ToArray();
 
-            public string ID { get; set; }
-        }
-        public Metadata metadata { get; set; }
-
-        public struct Input
-        {
-            public float[] inputWeights { get; set; }
-        }
-        public Input inputWeights { get; set; }
-
-        public struct NetworkLayers
-        {
-            public float[] networkWeights { get; set; }
-            public float[] networkBiases { get; set; }
-        }
-        public NetworkLayers networkLayers { get; set; }
-
-        public struct Output
-        {
-            public float[] outputWeights { get; set; }
-            public float[] outputBiases { get; set; }
-        }
-        public Output outputWeights { get; set; }
-    }
-
-    public class NetworkSerializer
-    {
-        private static float[] FlattenMatrixRowWise(Matrix<float> matrix)
-        {
-            int rows = matrix.RowCount;
-            int cols = matrix.ColumnCount;
-            float[] arr = new float[rows * cols];
-
-            for(int i = 0; i < rows; i++) {
-                for(int j = 0; j < cols; j++)
-                {
-                    arr[i * cols + j] = matrix.At(i, j);
-                }
-            }
-            return arr;
-        }
-        private static float[] FlattenListRowWise(List<float[]> matrix)
-        {
-            int rows = matrix.Count;
-            int cols = rows > 0 ? matrix.ElementAt(0).Length : 0;
-            float[] arr = new float[rows * cols];
-
-            for (int i = 0; i < rows; i++)
+            this.networkWeights = new float[network.networkWeights.Length][,];
+            for (int i = 0; i < network.networkWeights.Length; i++)
             {
-                for (int j = 0; j < cols; j++)
-                {
-                    arr[i * cols + j] = matrix[i][j];
-                }
+                this.networkWeights[i] = network.networkWeights[i].ToArray();
             }
-            return arr;
+
+            this.networkBiases = new float[network.networkBiases.Length][];
+            for (int i = 0; i < network.networkBiases.Length; i++)
+            {
+                this.networkBiases[i] = network.networkBiases[i].ToArray();
+            }
+
+            this.outputWeights = network.outputWeights.ToArray();
+            this.outputBiases = network.outputBiases.ToArray();
+
+            this.layers = network.layers;
+            this.nodesPerLayer = network.nodesPerLayer;
+            this.inputs = network.inputs;
+            this.outputs = network.outputs;
+
+            this.ID = network.ID;
         }
 
-        private static Matrix<float> ReinflateMatrix(float[] floats, int rows, int columns) {
-           return Matrix.Build.Dense(columns, rows, floats).Transpose();
-        }
-        private static List<float[]> ReinflateList(float[] floats, int entries, int floatsPerEntry)
+        public NeuralNetwork ToNetwork()
         {
-            List<float[]> reinflated = new List<float[]>();
-            for(int i = 0; i < entries; i++)
+            NeuralNetwork network = new NeuralNetwork(layers, nodesPerLayer, inputs, outputs);
+
+            network.inputWeights = Matrix<float>.Build.DenseOfArray(this.inputWeights);
+
+            for (int i = 0; i < this.networkWeights.Length; i++)
             {
-                float[] f = new float[floatsPerEntry];
-                for(int j = 0; j < floatsPerEntry; j++)
-                {
-                    f[j] = floats[i*floatsPerEntry + j];
-                }
-                reinflated.Add(f);
+                network.networkWeights[i] = Matrix<float>.Build.DenseOfArray(this.networkWeights[i]);
             }
-            return reinflated;
-        }
-
-        public static string JSONSerializeNeuralNetwork(NeuralNetwork network)
-        {
-            //fill json type
-            NeuralNetworkJSONType jsonType = new NeuralNetworkJSONType();
-
-            //metadata
-            NeuralNetworkJSONType.Metadata m = new NeuralNetworkJSONType.Metadata();
-            m.layers = network.layers;
-            m.nodesPerLayer = network.nodesPerLayer;
-            m.inputs = network.inputs;
-            m.outputs = network.outputs;
-            m.ID = network.ID;
-            jsonType.metadata = m;
-            //input weights
-            /*
-             * Even if the data is an array of floats, the matrix should
-             * be able to be reconstructed using the additional data in 
-             * the metadata.
-            */
-            NeuralNetworkJSONType.Input inp = new NeuralNetworkJSONType.Input();
-            inp.inputWeights = FlattenMatrixRowWise(network.inputWeights);
-            jsonType.inputWeights = inp;
-
-            //network layers values
-            NeuralNetworkJSONType.NetworkLayers nl = new NeuralNetworkJSONType.NetworkLayers();
-            int weightLayers = network.networkWeights.Length;
-            int biasesLayers = network.networkBiases.Length;
-            //weights first
-            List<float[]> networkWeightsList = new List<float[]>();
-            for (int i = 0; i < weightLayers; i++)
+            for (int i = 0; i < this.networkBiases.Length; i++)
             {
-                networkWeightsList.Add(FlattenMatrixRowWise(network.networkWeights[i]));
-            }
-            nl.networkWeights = FlattenListRowWise(networkWeightsList);
-            //biases
-            List<float[]> networkBiasesList = new List<float[]>();
-            for (int i = 0; i < biasesLayers; i++)
-            {
-                networkBiasesList.Add(network.networkBiases[i].ToArray());
-            }
-            nl.networkBiases = FlattenListRowWise(networkBiasesList);
-            jsonType.networkLayers = nl;
-
-            //output values
-            NeuralNetworkJSONType.Output outp = new NeuralNetworkJSONType.Output();
-
-            //weights
-            outp.outputWeights = FlattenMatrixRowWise(network.outputWeights);
-            //biases
-            outp.outputBiases = network.outputBiases.ToArray();
-
-            jsonType.outputWeights = outp;
-
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            return JsonSerializer.Serialize(jsonType, options);
-        }
-        public static NeuralNetwork JSONDeserializeNeuralNetwork(string json)
-        {
-            NeuralNetworkJSONType? deserialized = JsonSerializer.Deserialize<NeuralNetworkJSONType>(json);
-            if (deserialized == null)
-            {
-                throw new Exception("Could not serialize JSON into a Neural network");
+                network.networkBiases[i] = Vector<float>.Build.DenseOfArray(this.networkBiases[i]);
             }
 
-            NeuralNetwork network = new NeuralNetwork(
-                deserialized.metadata.layers,
-                deserialized.metadata.nodesPerLayer,
-                deserialized.metadata.inputs,
-                deserialized.metadata.outputs
-            );
-            //convert input weights
-            network.inputWeights = ReinflateMatrix(
-                deserialized.inputWeights.inputWeights,
-                deserialized.metadata.nodesPerLayer,
-                deserialized.metadata.inputs
-            );
+            network.outputWeights = Matrix<float>.Build.DenseOfArray(this.outputWeights);
+            network.outputBiases = Vector<float>.Build.DenseOfArray(this.outputBiases);
 
-            //convert network values
-            List<float[]> networkWeightsList = ReinflateList(
-                deserialized.networkLayers.networkWeights,
-                deserialized.metadata.layers - 1,
-                deserialized.metadata.nodesPerLayer * deserialized.metadata.nodesPerLayer
-            );
-            List<float[]> networkBiasesList = ReinflateList(
-                deserialized.networkLayers.networkBiases,
-                deserialized.metadata.layers,
-                deserialized.metadata.nodesPerLayer
-            );
-
-            for ( int i = 0; i < networkWeightsList.Count; i++)
-            {
-                network.networkWeights[i] = ReinflateMatrix(
-                    networkWeightsList[i],
-                    deserialized.metadata.nodesPerLayer,
-                    deserialized.metadata.nodesPerLayer
-                );
-            }
-            for (int i = 0; i < networkBiasesList.Count; i++)
-            {
-                network.networkBiases[i] = Vector<float>.Build.Dense(networkBiasesList[i]);
-            }
-
-            //convert output
-            network.outputWeights = ReinflateMatrix(
-                deserialized.outputWeights.outputWeights,
-                deserialized.metadata.outputs,
-                deserialized.metadata.nodesPerLayer
-            );
-            network.outputBiases = Vector<float>.Build.Dense(deserialized.outputWeights.outputBiases);
+            network.ID = this.ID;
 
             return network;
         }
+
+        public string ToJson()
+        {
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            settings.Formatting = Formatting.Indented;
+
+            return JsonConvert.SerializeObject(this, settings);
+        }
     }
 
+    static class NetworkConverter
+    {
+        public static string NetworkToJson(NeuralNetwork network)
+        {
+            intermediateNetwork intermediate = new intermediateNetwork(network);
 
+            return intermediate.ToJson();
+        }
+
+        public static NeuralNetwork JsonToNetwork(string Json)
+        {
+            return JsonConvert.DeserializeObject<NeuralNetwork>(Json);
+        }
+    }
 }
