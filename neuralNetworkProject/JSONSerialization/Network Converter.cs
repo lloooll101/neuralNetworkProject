@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Project.Network.JSONSerialization
 {
-    internal class intermediateNetwork
+    internal class IntermediateNetwork
     {
         public float[,] inputWeights;
 
@@ -18,9 +18,12 @@ namespace Project.Network.JSONSerialization
         public int inputs;
         public int outputs;
 
-        public string ID = "";
+        public IntermediateNetwork()
+        {
 
-        public intermediateNetwork(NeuralNetwork network)
+        }
+
+        public IntermediateNetwork(NeuralNetwork network)
         {
             this.inputWeights = network.inputWeights.ToArray();
 
@@ -43,8 +46,6 @@ namespace Project.Network.JSONSerialization
             this.nodesPerLayer = network.nodesPerLayer;
             this.inputs = network.inputs;
             this.outputs = network.outputs;
-
-            this.ID = network.ID;
         }
 
         public NeuralNetwork ToNetwork()
@@ -65,8 +66,6 @@ namespace Project.Network.JSONSerialization
             network.outputWeights = Matrix<float>.Build.DenseOfArray(this.outputWeights);
             network.outputBiases = Vector<float>.Build.DenseOfArray(this.outputBiases);
 
-            network.ID = this.ID;
-
             return network;
         }
 
@@ -83,14 +82,16 @@ namespace Project.Network.JSONSerialization
     {
         public static string NetworkToJson(NeuralNetwork network)
         {
-            intermediateNetwork intermediate = new intermediateNetwork(network);
+            IntermediateNetwork intermediate = new IntermediateNetwork(network);
 
             return intermediate.ToJson();
         }
 
         public static NeuralNetwork JsonToNetwork(string Json)
         {
-            return JsonConvert.DeserializeObject<NeuralNetwork>(Json);
+            IntermediateNetwork intermediate = JsonConvert.DeserializeObject<IntermediateNetwork>(Json);
+
+            return intermediate.ToNetwork();
         }
     }
 }

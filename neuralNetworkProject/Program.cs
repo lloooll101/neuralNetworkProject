@@ -18,8 +18,8 @@ namespace Project
         static void Main(string[] args)
         {
             //Settings
-            int generations = 2;
-            int netsPerGen = 2;
+            int generations = 25;
+            int netsPerGen = 25;
 
             int ticks = 2000;
 
@@ -71,15 +71,25 @@ namespace Project
                     string networkPath = Path.Combine(genPath, "network-" + j);
                     Directory.CreateDirectory(networkPath);
 
-                    scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    //scores[j] = runNetwork(networks[j], angles, ticks);
+                    //scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
+                    scores[j] = runNetwork(networks[j], angles, ticks);
                 }
-
-                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
 
                 genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
                 Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+
+                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
+
+            string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
+
+            Console.WriteLine(networkAsString);
+
+            NeuralNetwork importedNetwork = NetworkConverter.JsonToNetwork(networkAsString);
+
+            Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
+
+            Console.WriteLine(docPath);
 
             genLogs.Flush();
         }
