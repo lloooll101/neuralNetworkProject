@@ -19,7 +19,7 @@ namespace Project
         {
             //Settings
             int generations = 25;
-            int netsPerGen = 25;
+            int netsPerGen = 250;
 
             int ticks = 2000;
 
@@ -57,22 +57,33 @@ namespace Project
                 angles[i] = ((360f / numberOfAngles) * i) * ((float)Math.PI / 180);
             }
 
+            Task<float>[] scoresTasks = new Task<float>[netsPerGen];
+            float[] scores = new float[netsPerGen];
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             //Run each generation
             for (int i = 0; i < generations; i++)
             {
-                string genPath = Path.Combine(docPath, "Generation-" + i);
-                Directory.CreateDirectory(genPath);
+                //string genPath = Path.Combine(docPath, "Generation-" + i);
+                //Directory.CreateDirectory(genPath);
 
-                //Clear the scores array
-                float[] scores = new float[netsPerGen];
+                /*//Clear the scores array*/
+                
 
                 for(int j = 0; j < netsPerGen; j++)
                 {
-                    string networkPath = Path.Combine(genPath, "network-" + j);
-                    Directory.CreateDirectory(networkPath);
+                    //string networkPath = Path.Combine(genPath, "network-" + j);
+                    //Directory.CreateDirectory(networkPath);
 
-                    //scores[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    scores[j] = runNetwork(networks[j], angles, ticks);
+                    //scoresTasks[j] = runNetwork(networks[j], angles, ticks, networkPath);
+                    scoresTasks[j] = runNetwork(networks[j], angles, ticks);
+                }
+
+                for(int k = 0; k < netsPerGen; k++)
+                {
+                    scores[k] = scoresTasks[k].Result;
                 }
 
                 genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
@@ -80,6 +91,8 @@ namespace Project
 
                 networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
 
             //Convert the top network to a JSON string and output it
             string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
@@ -101,56 +114,62 @@ namespace Project
         }
 
         //Run the network against the set of angles, returning the score
-        public static float runNetwork(NeuralNetwork network, float[] angles, int ticks)
+        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks)
         {
-            //Keeps track of the total score of the network
-            float score = 0;
+            return await Task.Run(() => {
 
-            for (int i = 0; i < angles.Length; i++)
-            {
-                Pong pongGame = new Pong(500, 500, 5, angles[i]);
+                //Keeps track of the total score of the network
+                float score = 0;
+                Pong pongGame = new Pong(500, 500, 5, 0.0f);
 
-                for (int j = 0; j < ticks; j++)
+                for (int i = 0; i < angles.Length; i++)
                 {
-                    //Create the input vector
-                    float[] inputArray = [pongGame.ball.X, pongGame.ball.Y, pongGame.ball.Xvel, pongGame.ball.Yvel, pongGame.paddle.X];
-                    Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
+                    pongGame.reset(500, 500, 5, angles[i]);
 
-                    //Evaluate the network
-                    Vector<float> outputs = network.evaluateNetwork(inputs);
-
-                    //Set the action of the network
-                    switch (outputs.MaximumIndex())
+                    for (int j = 0; j < ticks; j++)
                     {
-                        case 0:
-                            pongGame.setAction("left");
+                        //Create the input vector
+                        float[] inputArray = [pongGame.ball.X, pongGame.ball.Y, pongGame.ball.Xvel, pongGame.ball.Yvel, pongGame.paddle.X];
+                        Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
+
+                        //Evaluate the network
+                        Vector<float> outputs = network.evaluateNetwork(inputs);
+
+                        //Set the action of the network
+                        switch (outputs.MaximumIndex())
+                        {
+                            case 0:
+                                pongGame.setAction("left");
+                                break;
+                            case 1:
+                                pongGame.setAction("right");
+                                break;
+                            case 2:
+                                pongGame.setAction("");
+                                break;
+                            default:
+                                pongGame.setAction("");
+                                break;
+                        }
+
+                        //Tick the game, and break if the ball falls
+                        if (!pongGame.tick())
+                        {
                             break;
-                        case 1:
-                            pongGame.setAction("right");
-                            break;
-                        case 2:
-                            pongGame.setAction("");
-                            break;
-                        default:
-                            pongGame.setAction("");
-                            break;
+                        }
                     }
 
-                    //Tick the game, and break if the ball falls
-                    if (!pongGame.tick())
-                    {
-                        break;
-                    }
+                    score += pongGame.score;
                 }
 
-                score += pongGame.score;
-            }
+                return score;
 
-            return score;
+            });
+            
         }
 
         //Run the network, logging every run
-        public static float runNetwork(NeuralNetwork network, float[] angles, int ticks, string path)
+        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks, string path)
         {
             StreamWriter networkLog = new StreamWriter(Path.Combine(path, "networkLog.txt"));
             string gamesPath = Path.Combine(path, "Games");

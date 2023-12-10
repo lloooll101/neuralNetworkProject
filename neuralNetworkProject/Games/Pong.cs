@@ -32,6 +32,24 @@
             this.score = 0;
             this.action = "";
         }
+        public void reset(int Xsize, int Ysize, float ballSpeed, float direction)
+        {
+            this.Xsize = Xsize;
+            this.Ysize = Ysize;
+
+            //Calcuate the components of the ball speed based on the direction and the total speed
+            float Xvel = (float)Math.Cos(direction) * ballSpeed;
+            float Yvel = (float)Math.Sin(direction) * ballSpeed;
+
+            //Place the ball in the middle of the screen
+            this.ball.reset(Xsize / 2, Ysize / 2, Xvel, Yvel);
+
+            //Place the paddle on the screen, and set its size
+            this.paddle.reset(Xsize / 2, Ysize / 10, Xsize / 10);
+
+            this.score = 0;
+            this.action = "";
+        }
 
         //Sets the action to be executed in the next tick
         public void setAction(string action)
@@ -128,15 +146,28 @@
                 this.Xvel = Xvel;
                 this.Yvel = Yvel;
             }
+            public void reset(float X, float Y, float Xvel, float Yvel)
+            {
+                this.X = X;
+                this.Y = Y;
+                this.Xvel = Xvel;
+                this.Yvel = Yvel;
+            }
         }
 
         public class Paddle
         {
             public float X;
-            public readonly float Y;
+            public float Y;
             public int width;
 
             public Paddle(float X, float Y, int width)
+            {
+                this.X = X;
+                this.Y = Y;
+                this.width = width;
+            }
+            public void reset(float X, float Y, int width)
             {
                 this.X = X;
                 this.Y = Y;
