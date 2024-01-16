@@ -30,7 +30,7 @@ namespace Project
 
             int numberOfAngles = 60;
 
-            //Get the current project and append the current times
+            //Get the current project and append the current time
             string docPath = Environment.CurrentDirectory;
             docPath = Path.Combine(docPath, DateTime.Now.ToString("MM-dd-yy HH-mm-ss"));
 
@@ -91,6 +91,7 @@ namespace Project
 
                 networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
+
             stopwatch.Stop();
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
 

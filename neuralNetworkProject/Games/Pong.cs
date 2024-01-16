@@ -1,42 +1,38 @@
-﻿namespace Games.Pong
+﻿using MathNet.Numerics.LinearAlgebra;
+
+namespace Games.Pong
 {
     using gameObjects;
     class Pong
     {
-        //Declare variables for the pong game
-        public int Xsize;
-        public int Ysize;
+        public static int inputs = 5;
+        public static int outputs = 3;
 
-        public Ball ball;
-        public Paddle paddle;
+        //Declare variables for the pong game
+        private int Xsize;
+        private int Ysize;
+
+        private Ball ball;
+        private Paddle paddle;
 
         public float score;
-        public string action;
+        private int action;
 
         //Constructor method
-        public Pong(int Xsize, int Ysize, float ballSpeed, float direction)
+        public Pong(int Xsize, int Ysize)
         {
             this.Xsize = Xsize;
             this.Ysize = Ysize;
 
-            //Calcuate the components of the ball speed based on the direction and the total speed
-            float Xvel = (float)Math.Cos(direction) * ballSpeed;
-            float Yvel = (float)Math.Sin(direction) * ballSpeed;
+            this.ball = new Ball();
+            this.paddle = new Paddle();
 
-            //Place the ball in the middle of the screen
-            this.ball = new Ball(Xsize / 2, Ysize / 2, Xvel, Yvel);
-
-            //Place the paddle on the screen, and set its size
-            this.paddle = new Paddle(Xsize / 2, Ysize / 10, Xsize / 10);
-
-            this.score = 0;
-            this.action = "";
+            reset(0, 0);
         }
-        public void reset(int Xsize, int Ysize, float ballSpeed, float direction)
-        {
-            this.Xsize = Xsize;
-            this.Ysize = Ysize;
 
+        //Resets the game
+        public void reset(float ballSpeed, float direction)
+        {
             //Calcuate the components of the ball speed based on the direction and the total speed
             float Xvel = (float)Math.Cos(direction) * ballSpeed;
             float Yvel = (float)Math.Sin(direction) * ballSpeed;
@@ -48,13 +44,35 @@
             this.paddle.reset(Xsize / 2, Ysize / 10, Xsize / 10);
 
             this.score = 0;
-            this.action = "";
+            this.action = 0;
         }
 
         //Sets the action to be executed in the next tick
-        public void setAction(string action)
+        public void setAction(Vector<float> outputs)
         {
-            this.action = action;
+            switch (outputs.MaximumIndex())
+            {
+                case 0:
+                    action = -1;
+                    break;
+                case 1:
+                    action = 1;
+                    break;
+                case 2:
+                    action = 0;
+                    break;
+                default:
+                    action = 0;
+                    break;
+            }
+        }
+
+        public Vector<float> getInput()
+        {
+            float[] inputArray = [ball.X, ball.Y, ball.Xvel, ball.Yvel, paddle.X];
+            Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
+
+            return inputs;
         }
 
         //Ticks the game
@@ -62,14 +80,7 @@
         public bool tick()
         {
             //Moves the paddle based on the current setAction
-            if (action == "left")
-            {
-                paddle.X -= 3;
-            }
-            else if (action == "right")
-            {
-                paddle.X += 3;
-            }
+            paddle.X += action * 3;
 
             //Check to see if the ball needs to be checked for collision
             if (ball.Y + ball.Yvel < paddle.Y)
@@ -139,12 +150,9 @@
             public float Xvel;
             public float Yvel;
 
-            public Ball(float X, float Y, float Xvel, float Yvel)
+            public Ball()
             {
-                this.X = X;
-                this.Y = Y;
-                this.Xvel = Xvel;
-                this.Yvel = Yvel;
+                reset(0, 0, 0, 0);
             }
             public void reset(float X, float Y, float Xvel, float Yvel)
             {
@@ -161,12 +169,11 @@
             public float Y;
             public int width;
 
-            public Paddle(float X, float Y, int width)
+            public Paddle()
             {
-                this.X = X;
-                this.Y = Y;
-                this.width = width;
+                reset(0, 0, 0);
             }
+
             public void reset(float X, float Y, int width)
             {
                 this.X = X;
