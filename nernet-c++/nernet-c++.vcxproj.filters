@@ -52,7 +52,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="networkinit.comp">
+    <None Include="fillrandom1d.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="fillrandom1darr.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="fillrandom2d.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="fillrandom2darr.comp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

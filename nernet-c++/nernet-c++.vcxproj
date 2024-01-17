@@ -161,7 +161,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="networkinit.comp" />
+    <None Include="fillrandom1d.comp" />
+    <None Include="fillrandom1darr.comp" />
+    <None Include="fillrandom2d.comp" />
+    <None Include="fillrandom2darr.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
