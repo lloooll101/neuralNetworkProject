@@ -168,15 +168,18 @@ bool buildNetwork(glNeuralNetwork& network) {
 	glBindImageTexture(1, rngseedtex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glUseProgram(fillRandom2D_Program);
 	glDispatchCompute(network.inputs, network.nodesPerLayer, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	random = (float)rd() / rd.max();
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 1, GL_RED, GL_FLOAT, (const void*)&random);
+
 
 	//network weights
 	glBindImageTexture(0, network.networkWeights, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 	glBindImageTexture(1, rngseedtex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glUseProgram(fillRandom2DArr_Program);
 	glDispatchCompute(network.nodesPerLayer, network.nodesPerLayer, network.layers);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	random = (float)rd() / rd.max();
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 1, GL_RED, GL_FLOAT, (const void*)&random);
@@ -186,6 +189,7 @@ bool buildNetwork(glNeuralNetwork& network) {
 	glBindImageTexture(1, rngseedtex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glUseProgram(fillRandom1DArr_Program);
 	glDispatchCompute(network.nodesPerLayer, network.layers, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	random = (float)rd() / rd.max();
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 1, GL_RED, GL_FLOAT, (const void*)&random);
@@ -195,6 +199,7 @@ bool buildNetwork(glNeuralNetwork& network) {
 	glBindImageTexture(1, rngseedtex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glUseProgram(fillRandom2D_Program);
 	glDispatchCompute(network.nodesPerLayer, network.outputs, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	random = (float)rd() / rd.max();
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 1, GL_RED, GL_FLOAT, (const void*)&random);
@@ -204,14 +209,13 @@ bool buildNetwork(glNeuralNetwork& network) {
 	glBindImageTexture(1, rngseedtex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glUseProgram(fillRandom1D_Program);
 	glDispatchCompute(network.outputs, 1, 1);
-
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	
 
 	/*glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	float* debugarr = new float[network.inputs * network.nodesPerLayer];
 	glBindTexture(GL_TEXTURE_2D, network.inputWeights);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, debugarr);*/
-
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	glDeleteTextures(1, &rngseedtex);
 
