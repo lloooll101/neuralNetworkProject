@@ -1,15 +1,18 @@
 #pragma once
 #include <vector>
 
+enum class WarpSize {
+	WIDTH_8, WIDTH_16, WIDTH_32, WIDTH_64
+};
+
 struct glNeuralNetworkGroup
 {
 	struct {
-		bool MaximizeKernelUtilization;
-		bool AllowSizeDownscale;
-		bool AllowSizeUpscale;
+		bool AutoOptimizeWarpSize;
+		bool AllowNetworkResizeKernelOptimizations;
 		bool UseFP16;
-		bool ForceMultipleOf4;
-		bool AllowTighterPacking;
+		bool ForceTighterLayerPacking;
+		WarpSize warpSize;
 	} flags;
 
 	unsigned int inputWeights;
@@ -28,7 +31,7 @@ struct glNeuralNetworkGroup
 };
 
 bool buildNetworkGroup(glNeuralNetworkGroup&);
-bool evalNetworkGroup(glNeuralNetworkGroup&, unsigned int);
+bool evalNetworkGroup(glNeuralNetworkGroup&, unsigned int, unsigned int);
 bool deleteNetworkGroup(glNeuralNetworkGroup&);
 
 void test();

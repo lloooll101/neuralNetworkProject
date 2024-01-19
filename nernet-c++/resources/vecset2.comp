@@ -1,0 +1,9 @@
+#version 460
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(r32f, binding = 0) uniform image1D vector;
+
+void main() {
+    imageStore(vector, int(gl_WorkGroupID.x), vec4(2.0f));
+}

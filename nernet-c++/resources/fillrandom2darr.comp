@@ -3,7 +3,8 @@
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(r32f, binding = 0) uniform image2DArray matrix;
-layout(r32f, binding = 1) uniform image1D rngseed;
+
+layout( location = 0 ) uniform float inpSeed;
 
 float PHI = 1.61803398874989484820459;  // Golden Ratio   
 
@@ -15,6 +16,6 @@ void main() {
     ivec3 texCoord = ivec3(gl_WorkGroupID.xyz);
     vec3 texCoordF = vec3(float(gl_WorkGroupID.x)/float(gl_WorkGroupSize.x), float(gl_WorkGroupID.y)/float(gl_WorkGroupSize.y), float(gl_WorkGroupID.z)/float(gl_WorkGroupSize.z));
 
-    imageStore(matrix, texCoord, vec4(gold_noise(texCoordF + vec3(1.0f), imageLoad(rngseed, 0).r), 0.0f, 0.0f, 0.0f));
+    imageStore(matrix, texCoord, vec4(gold_noise(texCoordF + vec3(1.0f), inpSeed), 0.0f, 0.0f, 0.0f));
     
 }

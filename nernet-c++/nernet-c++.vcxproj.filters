@@ -22,71 +22,62 @@
     <Filter Include="Resource Files\fillrand">
       <UniqueIdentifier>{fb506471-9d9b-401f-8dfa-1cf3bcb16fce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\math\single">
-      <UniqueIdentifier>{b8faa5df-d865-46cd-adb6-a9c97384eb92}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\math\group">
-      <UniqueIdentifier>{8ab39572-9631-4bd4-98f8-d60cff7ba038}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GLFW\glfw3.h">
-      <Filter>Header Files\libincludes</Filter>
-    </ClInclude>
-    <ClInclude Include="GLFW\glfw3native.h">
-      <Filter>Header Files\libincludes</Filter>
-    </ClInclude>
-    <ClInclude Include="glInit.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KHR\khrplatform.h">
-      <Filter>Header Files\libincludes</Filter>
-    </ClInclude>
-    <ClInclude Include="glad\gl.h">
-      <Filter>Header Files\libincludes</Filter>
-    </ClInclude>
-    <ClInclude Include="glNetwork.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="source\gl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="init.cpp">
+    <ClCompile Include="source\glNetwork.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gl.c">
+    <ClCompile Include="source\init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="glNetwork.cpp">
+    <ClCompile Include="source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fillrandom1d.comp">
+    <None Include="resources\fillrandom1darr.comp">
       <Filter>Resource Files\fillrand</Filter>
     </None>
-    <None Include="fillrandom1darr.comp">
+    <None Include="resources\fillrandom2darr.comp">
       <Filter>Resource Files\fillrand</Filter>
     </None>
-    <None Include="fillrandom2d.comp">
-      <Filter>Resource Files\fillrand</Filter>
-    </None>
-    <None Include="fillrandom2darr.comp">
-      <Filter>Resource Files\fillrand</Filter>
-    </None>
-    <None Include="matvecmul.comp">
-      <Filter>Resource Files\math\single</Filter>
-    </None>
-    <None Include="vecrelu.comp">
-      <Filter>Resource Files\math\single</Filter>
-    </None>
-    <None Include="vecvecadd.comp">
-      <Filter>Resource Files\math\single</Filter>
-    </None>
-    <None Include="vecadd1.comp">
+    <None Include="resources\matset1.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="resources\matset2.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="resources\vecadd1.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="resources\vecset1.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="resources\vecset2.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes\glad\gl.h">
+      <Filter>Header Files\libincludes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\GLFW\glfw3.h">
+      <Filter>Header Files\libincludes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\GLFW\glfw3native.h">
+      <Filter>Header Files\libincludes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\KHR\khrplatform.h">
+      <Filter>Header Files\libincludes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\glInit.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\glNetwork.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

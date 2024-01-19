@@ -1,0 +1,9 @@
+#version 460
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(r32f, binding = 0) uniform image2D matrix;
+
+void main() {
+    imageStore(matrix, ivec2(gl_WorkGroupID.x, gl_WorkGroupID.y), vec4(1.0f));
+}
