@@ -13,7 +13,8 @@ float gold_noise(in vec3 xyz, in float seed){
 
 void main() {
     ivec3 texCoord = ivec3(gl_WorkGroupID.xyz);
-    vec3 texCoordF = vec3(float(gl_WorkGroupID.x)/float(gl_WorkGroupSize.x), float(gl_WorkGroupID.y)/float(gl_WorkGroupSize.y), float(gl_WorkGroupID.z).float(gl_WorkGroupSize.z));
+    vec3 texCoordF = vec3(float(gl_WorkGroupID.x)/float(gl_WorkGroupSize.x), float(gl_WorkGroupID.y)/float(gl_WorkGroupSize.y), float(gl_WorkGroupID.z)/float(gl_WorkGroupSize.z));
 
     imageStore(matrix, texCoord, vec4(gold_noise(texCoordF + vec3(1.0f), imageLoad(rngseed, 0).r), 0.0f, 0.0f, 0.0f));
+    
 }

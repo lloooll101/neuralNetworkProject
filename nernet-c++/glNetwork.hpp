@@ -1,19 +1,34 @@
 #pragma once
+#include <vector>
 
-struct glNeuralNetwork
+struct glNeuralNetworkGroup
 {
-	unsigned int inputWeights = 0;
-	unsigned int networkWeights = 0;
-	unsigned int networkBiases = 0;
-	unsigned int outputWeights = 0;
-	unsigned int outputBiases = 0;
+	struct {
+		bool MaximizeKernelUtilization;
+		bool AllowSizeDownscale;
+		bool AllowSizeUpscale;
+		bool UseFP16;
+		bool ForceMultipleOf4;
+		bool AllowTighterPacking;
+	} flags;
 
-	int layers = 0;
-	int nodesPerLayer = 0;
-	int inputs = 0;
-	int outputs = 0;
+	unsigned int inputWeights;
+
+	std::vector<unsigned int> networkWeights;
+	unsigned int networkBiases;
+
+	unsigned int outputWeights;
+	unsigned int outputBiases;
+
+	int layers;
+	int nodesPerLayer;
+	int inputs;
+	int outputs;
+	int networkCount;
 };
 
-bool buildNetwork(glNeuralNetwork&);
-bool evalNetwork(glNeuralNetwork&, unsigned int);
-bool deleteNetwork(glNeuralNetwork&);
+bool buildNetworkGroup(glNeuralNetworkGroup&);
+bool evalNetworkGroup(glNeuralNetworkGroup&, unsigned int);
+bool deleteNetworkGroup(glNeuralNetworkGroup&);
+
+void test();

@@ -1,0 +1,11 @@
+#version 460 core
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(r8, binding = 0) uniform image1D buf;
+
+void main() {
+	float getf = imageLoad(buf, int(gl_WorkGroupID.x)).r;
+	getf += 1.0f;
+	imageStore(buf, int(gl_WorkGroupID.x), vec4(0.5f, 0.0f, 0.0f, 0.0f));
+}

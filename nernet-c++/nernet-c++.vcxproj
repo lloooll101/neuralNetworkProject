@@ -165,6 +165,10 @@
     <None Include="fillrandom1darr.comp" />
     <None Include="fillrandom2d.comp" />
     <None Include="fillrandom2darr.comp" />
+    <None Include="matvecmul.comp" />
+    <None Include="vecadd1.comp" />
+    <None Include="vecrelu.comp" />
+    <None Include="vecvecadd.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

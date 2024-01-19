@@ -16,6 +16,18 @@
     <Filter Include="Header Files\libincludes">
       <UniqueIdentifier>{cf0b93db-3d31-4298-b5ec-b5140a59fa86}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\math">
+      <UniqueIdentifier>{85a5aae1-64af-4958-84a0-b6b15a169bcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\fillrand">
+      <UniqueIdentifier>{fb506471-9d9b-401f-8dfa-1cf3bcb16fce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\math\single">
+      <UniqueIdentifier>{b8faa5df-d865-46cd-adb6-a9c97384eb92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\math\group">
+      <UniqueIdentifier>{8ab39572-9631-4bd4-98f8-d60cff7ba038}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLFW\glfw3.h">
@@ -53,15 +65,27 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="fillrandom1d.comp">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\fillrand</Filter>
     </None>
     <None Include="fillrandom1darr.comp">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\fillrand</Filter>
     </None>
     <None Include="fillrandom2d.comp">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\fillrand</Filter>
     </None>
     <None Include="fillrandom2darr.comp">
+      <Filter>Resource Files\fillrand</Filter>
+    </None>
+    <None Include="matvecmul.comp">
+      <Filter>Resource Files\math\single</Filter>
+    </None>
+    <None Include="vecrelu.comp">
+      <Filter>Resource Files\math\single</Filter>
+    </None>
+    <None Include="vecvecadd.comp">
+      <Filter>Resource Files\math\single</Filter>
+    </None>
+    <None Include="vecadd1.comp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
