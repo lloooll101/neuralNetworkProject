@@ -11,12 +11,19 @@
 
 bool computeShadersCompiled = false;
 enum GLComputePrograms {
-	FillRandom1DArray, FillRandom2DArray, FillRandom4x4x4_2DArray
+	FillRandom1DArray,
+	FillRandom4x4x1_1DArray, FillRandom4x8x1_1DArray, FillRandom8x8x1_1DArray, FillRandom16x64x1_1DArray,
+	FillRandom4x4x4_2DArray
+};
+struct KernelSize {
+	unsigned int x, y, z;
+	KernelSize(unsigned int x, unsigned int y, unsigned int z) : x{ x }, y{ y }, z{ z } {};
 };
 std::map<GLComputePrograms, unsigned int> ProgramMap;
+std::map<GLComputePrograms, KernelSize> ProgramKernelSizes;
 
 bool compileComputeShaders() {
-	auto AddProgramToMap = [&](const std::string& filename, GLComputePrograms programtype) -> bool {
+	auto AddProgramToMap = [&](const std::string& filename, GLComputePrograms programtype, KernelSize kernelSize) -> bool {
 		std::ifstream stream;
 		std::stringstream ss;
 
@@ -64,6 +71,7 @@ bool compileComputeShaders() {
 		}
 		try {
 			ProgramMap.insert({ {programtype, program} });
+			ProgramKernelSizes.insert({ {programtype, kernelSize} });
 		}
 		catch (std::exception) {
 			return false;
@@ -75,9 +83,14 @@ bool compileComputeShaders() {
 	bool success = false;
 
 	do {
-		if (!AddProgramToMap("resources/fillrandom1darr.comp", FillRandom1DArray)) break; //optimize fill random kernel
-		if (!AddProgramToMap("resources/fillrandom2darr.comp", FillRandom2DArray)) break;
-		if (!AddProgramToMap("resources/4x4x4rand2darr.comp", FillRandom4x4x4_2DArray)) break;
+		if (!AddProgramToMap("resources/fillrandom1darr.comp", FillRandom1DArray, KernelSize(1, 1, 1))) break; //optimize fill random kernel
+
+		if (!AddProgramToMap("resources/4x4x1rand1darr.comp", FillRandom4x4x1_1DArray, KernelSize(4, 4, 1))) break;
+		if (!AddProgramToMap("resources/4x8x1rand1darr.comp", FillRandom4x8x1_1DArray, KernelSize(4, 8, 1))) break;
+		if (!AddProgramToMap("resources/8x8x1rand1darr.comp", FillRandom8x8x1_1DArray, KernelSize(8, 8, 1))) break;
+		if (!AddProgramToMap("resources/16x64x1rand1darr.comp", FillRandom16x64x1_1DArray, KernelSize(16, 64, 1))) break;
+
+		if (!AddProgramToMap("resources/4x4x4rand2darr.comp", FillRandom4x4x4_2DArray, KernelSize(4, 4, 4))) break;
 
 		success = true;
 	} while (false);
@@ -104,10 +117,14 @@ long roundUpDiv(long dividend, long divisor) {
 
 bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 
-	int maxTextureSize, maxTextureLayers, maxWorkGroupInvocations;
+	int maxTextureSize, maxTextureLayers, maxThreadsPerInvocation;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
 	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTextureLayers);
-	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxWorkGroupInvocations);
+	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxThreadsPerInvocation);
+	long maxWorkGroups[3];
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, (GLint*) & (maxWorkGroups[0]));
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, (GLint*) &(maxWorkGroups[1]));
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, (GLint*) &(maxWorkGroups[2]));
 
 	if (network.layers <= 0 || network.nodesPerLayer <= 0 || network.inputs <= 0 || network.outputs <= 0 || network.networkCount <= 0) {
 		std::cout << "Invalid network configuration!" << std::endl;
@@ -123,11 +140,6 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 		return false;
 	}
 
-	//extra edge cases
-	if (network.flags.AutoOptimizeWarpSize && network.flags.AllowNetworkResizeKernelOptimizations) {
-		std::cout << "AutoOptimizeWarpSize and AllowNetworkResizeKernelOptimizations cannot be used together as they rely on each other being constant." << std::endl;
-		return false;
-	}
 
 	glGenTextures(1, &(network.inputWeights));
 	//glGenTextures(1, &(network.networkWeights));
@@ -192,12 +204,6 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 	glUniform3i(1, network.inputs, network.nodesPerLayer, network.networkCount);
 	glDispatchCompute(roundUpDiv(network.inputs, 4), roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.networkCount, 4));
 
-	/*glBindImageTexture(0, network.inputWeights, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-	glUseProgram(ProgramMap[FillRandom2DArray]);
-	glUniform1f(0, (float)trueRng() / trueRng.max());
-	glDispatchCompute(network.inputs, network.nodesPerLayer, network.networkCount);*/
-	//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
 	//network weights
 	for (int i = 0; i < network.networkWeights.size(); i++) {
 		glBindImageTexture(0, network.networkWeights[i], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
@@ -230,10 +236,10 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	////test
-	float* testbuf = new float[network.inputs * network.nodesPerLayer * network.networkCount];
+	/*float* testbuf = new float[network.inputs * network.nodesPerLayer * network.networkCount];
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.inputWeights);
 	glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RED, GL_FLOAT, testbuf);
-	delete[] testbuf;
+	delete[] testbuf;*/
 
 	return true;
 }

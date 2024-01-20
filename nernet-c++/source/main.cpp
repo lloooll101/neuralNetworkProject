@@ -18,10 +18,9 @@ int main() {
 	//test();
 
 	std::vector<glNeuralNetworkGroup> groups;
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 2800; i++) {
 		glNeuralNetworkGroup nn;
 		nn.flags.AllowNetworkResizeKernelOptimizations = false;
-		nn.flags.AutoOptimizeWarpSize = false;
 		nn.flags.ForceTighterLayerPacking = false;
 		nn.flags.UseFP16 = false;
 		nn.flags.warpSize = WarpSize::WIDTH_8;
@@ -29,7 +28,7 @@ int main() {
 		nn.layers = 2;
 		nn.nodesPerLayer = 16;
 		nn.outputs = 8;
-		nn.networkCount = 8;
+		nn.networkCount = 1024;
 		bool success = buildNetworkGroup(nn);
 		if (!success) return 1;
 		groups.push_back(nn);

@@ -22,6 +22,12 @@
     <Filter Include="Resource Files\random">
       <UniqueIdentifier>{fb506471-9d9b-401f-8dfa-1cf3bcb16fce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\random\2d">
+      <UniqueIdentifier>{771eeb10-fb8b-481e-8d72-dafc4d843ca6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\random\3d">
+      <UniqueIdentifier>{509b81ed-cf34-4550-b3c9-e7bcf17cbfa8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gl.c">
@@ -38,29 +44,23 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\4x4x4rand2darr.comp">
+      <Filter>Resource Files\random\3d</Filter>
+    </None>
     <None Include="resources\fillrandom1darr.comp">
-      <Filter>Resource Files\random</Filter>
+      <Filter>Resource Files\random\2d</Filter>
     </None>
-    <None Include="resources\fillrandom2darr.comp">
-      <Filter>Resource Files\random</Filter>
+    <None Include="resources\4x8x1rand1darr.comp">
+      <Filter>Resource Files\random\2d</Filter>
     </None>
-    <None Include="resources\matset1.comp">
-      <Filter>Resource Files</Filter>
+    <None Include="resources\4x4x1rand1darr.comp">
+      <Filter>Resource Files\random\2d</Filter>
     </None>
-    <None Include="resources\matset2.comp">
-      <Filter>Resource Files</Filter>
+    <None Include="resources\8x8x1rand1darr.comp">
+      <Filter>Resource Files\random\2d</Filter>
     </None>
-    <None Include="resources\vecadd1.comp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="resources\vecset1.comp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="resources\vecset2.comp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="4x4x4rand2darr.comp">
-      <Filter>Resource Files\random</Filter>
+    <None Include="resources\16x64x1rand1darr.comp">
+      <Filter>Resource Files\random\2d</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

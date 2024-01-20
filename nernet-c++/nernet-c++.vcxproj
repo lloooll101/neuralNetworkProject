@@ -157,14 +157,12 @@
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="4x4x4rand2darr.comp" />
+    <None Include="resources\16x64x1rand1darr.comp" />
+    <None Include="resources\4x4x1rand1darr.comp" />
+    <None Include="resources\4x4x4rand2darr.comp" />
+    <None Include="resources\4x8x1rand1darr.comp" />
+    <None Include="resources\8x8x1rand1darr.comp" />
     <None Include="resources\fillrandom1darr.comp" />
-    <None Include="resources\fillrandom2darr.comp" />
-    <None Include="resources\matset1.comp" />
-    <None Include="resources\matset2.comp" />
-    <None Include="resources\vecadd1.comp" />
-    <None Include="resources\vecset1.comp" />
-    <None Include="resources\vecset2.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\glad\gl.h" />
