@@ -157,6 +157,7 @@
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="4x4x4rand2darr.comp" />
     <None Include="resources\fillrandom1darr.comp" />
     <None Include="resources\fillrandom2darr.comp" />
     <None Include="resources\matset1.comp" />

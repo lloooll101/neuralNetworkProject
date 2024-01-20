@@ -19,7 +19,7 @@
     <Filter Include="Resource Files\math">
       <UniqueIdentifier>{85a5aae1-64af-4958-84a0-b6b15a169bcf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\fillrand">
+    <Filter Include="Resource Files\random">
       <UniqueIdentifier>{fb506471-9d9b-401f-8dfa-1cf3bcb16fce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -39,10 +39,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\fillrandom1darr.comp">
-      <Filter>Resource Files\fillrand</Filter>
+      <Filter>Resource Files\random</Filter>
     </None>
     <None Include="resources\fillrandom2darr.comp">
-      <Filter>Resource Files\fillrand</Filter>
+      <Filter>Resource Files\random</Filter>
     </None>
     <None Include="resources\matset1.comp">
       <Filter>Resource Files</Filter>
@@ -58,6 +58,9 @@
     </None>
     <None Include="resources\vecset2.comp">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="4x4x4rand2darr.comp">
+      <Filter>Resource Files\random</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

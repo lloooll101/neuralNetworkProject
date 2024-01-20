@@ -15,10 +15,10 @@
 int main() {
 	if (!startOpenGLContext()) return 1;
 
-	test();
+	//test();
 
 	std::vector<glNeuralNetworkGroup> groups;
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 10; i++) {
 		glNeuralNetworkGroup nn;
 		nn.flags.AllowNetworkResizeKernelOptimizations = false;
 		nn.flags.AutoOptimizeWarpSize = false;
@@ -29,8 +29,9 @@ int main() {
 		nn.layers = 2;
 		nn.nodesPerLayer = 16;
 		nn.outputs = 8;
-		nn.networkCount = 1000;
-		buildNetworkGroup(nn);
+		nn.networkCount = 8;
+		bool success = buildNetworkGroup(nn);
+		if (!success) return 1;
 		groups.push_back(nn);
 	}
 	return 0;

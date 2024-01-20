@@ -14,7 +14,7 @@ float gold_noise(in vec2 xy, in float seed){
 
 void main() {
     ivec2 texCoord = ivec2(gl_WorkGroupID.xy);
-    vec2 texCoordF = vec2(float(gl_WorkGroupID.x)/float(gl_WorkGroupSize.x), float(gl_WorkGroupID.y)/float(gl_WorkGroupSize.y));
+    vec2 texCoordF = vec2(float(gl_WorkGroupID.x)/float(gl_NumWorkGroups.x), float(gl_WorkGroupID.y)/float(gl_NumWorkGroups.y));
 
     imageStore(matrix, texCoord, vec4(gold_noise(texCoordF + vec2(1.0f), inpSeed), 0.0f, 0.0f, 0.0f));
 }
