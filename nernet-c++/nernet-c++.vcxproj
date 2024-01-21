@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -157,12 +157,15 @@
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\16x16x4fp16rand2darr.comp" />
+    <None Include="resources\16x16x4rand2darr.comp" />
+    <None Include="resources\16x64x1fp16rand1darr.comp" />
     <None Include="resources\16x64x1rand1darr.comp" />
-    <None Include="resources\4x4x1rand1darr.comp" />
+    <None Include="resources\4x16x1fp16rand1darr.comp" />
+    <None Include="resources\4x4x4fp16rand2darr.comp" />
     <None Include="resources\4x4x4rand2darr.comp" />
-    <None Include="resources\4x8x1rand1darr.comp" />
-    <None Include="resources\8x8x1rand1darr.comp" />
-    <None Include="resources\fillrandom1darr.comp" />
+    <None Include="resources\4x16x1rand1darr.comp" />
+    <None Include="resources\feedforward_w4d16.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\glad\gl.h" />

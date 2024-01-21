@@ -28,6 +28,24 @@
     <Filter Include="Resource Files\random\3d">
       <UniqueIdentifier>{509b81ed-cf34-4550-b3c9-e7bcf17cbfa8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\random\3d\f32">
+      <UniqueIdentifier>{69b158a8-10a1-4292-92fe-bc4535258faf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\random\2d\f32">
+      <UniqueIdentifier>{8fc94d35-8024-4e43-a476-4a682e7dbe6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\random\3d\f16">
+      <UniqueIdentifier>{c2ac51b6-2efc-4f7f-98c9-33f5c9ab01fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\random\2d\f16">
+      <UniqueIdentifier>{caef7cd4-e490-4d79-8876-4f158d8e9a1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\math\feedforward">
+      <UniqueIdentifier>{96f924c5-47b0-4694-ace8-e8d762bc4541}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\math\feedforward\f32">
+      <UniqueIdentifier>{d779c8fd-b8e7-44a3-91d4-8adb0a01e99b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gl.c">
@@ -45,22 +63,31 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\4x4x4rand2darr.comp">
-      <Filter>Resource Files\random\3d</Filter>
+      <Filter>Resource Files\random\3d\f32</Filter>
     </None>
-    <None Include="resources\fillrandom1darr.comp">
-      <Filter>Resource Files\random\2d</Filter>
+    <None Include="resources\16x16x4rand2darr.comp">
+      <Filter>Resource Files\random\3d\f32</Filter>
     </None>
-    <None Include="resources\4x8x1rand1darr.comp">
-      <Filter>Resource Files\random\2d</Filter>
-    </None>
-    <None Include="resources\4x4x1rand1darr.comp">
-      <Filter>Resource Files\random\2d</Filter>
-    </None>
-    <None Include="resources\8x8x1rand1darr.comp">
-      <Filter>Resource Files\random\2d</Filter>
+    <None Include="resources\4x16x1rand1darr.comp">
+      <Filter>Resource Files\random\2d\f32</Filter>
     </None>
     <None Include="resources\16x64x1rand1darr.comp">
-      <Filter>Resource Files\random\2d</Filter>
+      <Filter>Resource Files\random\2d\f32</Filter>
+    </None>
+    <None Include="resources\4x4x4fp16rand2darr.comp">
+      <Filter>Resource Files\random\3d\f16</Filter>
+    </None>
+    <None Include="resources\16x16x4fp16rand2darr.comp">
+      <Filter>Resource Files\random\3d\f16</Filter>
+    </None>
+    <None Include="resources\4x16x1fp16rand1darr.comp">
+      <Filter>Resource Files\random\2d\f16</Filter>
+    </None>
+    <None Include="resources\16x64x1fp16rand1darr.comp">
+      <Filter>Resource Files\random\2d\f16</Filter>
+    </None>
+    <None Include="resources\feedforward_w4d16.comp">
+      <Filter>Resource Files\math\feedforward\f32</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

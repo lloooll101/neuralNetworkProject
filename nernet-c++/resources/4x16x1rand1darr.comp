@@ -2,9 +2,9 @@
 
 layout (local_size_x = 4, local_size_y = 8, local_size_z = 1) in;
 
-layout(r32f, binding = 0) uniform image1DArray matrix;
+layout(rgba32f, binding = 0) uniform image1DArray matrix;
 
-layout( location = 0 ) uniform float inpSeed;
+layout( location = 0 ) uniform vec4 inpSeed;
 layout( location = 1 ) uniform ivec2 matrixDimensions;
 
 float PHI = 1.61803398874989484820459;  // Golden Ratio   
@@ -19,5 +19,12 @@ void main() {
         return;
     }
     vec2 texCoordF = vec2(texCoord) / vec2(matrixDimensions);
-    imageStore(matrix, texCoord, vec4(gold_noise(texCoordF + vec2(0.1f), inpSeed), 0.0f, 0.0f, 0.0f));
+    imageStore(matrix, texCoord, 
+        vec4(
+            gold_noise(texCoordF + vec2(0.1f), inpSeed.x), 
+            gold_noise(texCoordF + vec2(0.1f), inpSeed.y), 
+            gold_noise(texCoordF + vec2(0.1f), inpSeed.z), 
+            gold_noise(texCoordF + vec2(0.1f), inpSeed.w)
+        )
+    );
 }

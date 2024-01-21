@@ -1,0 +1,39 @@
+#version 460 core
+
+layout (local_size_x = 4, local_size_y = 1, local_size_z = 16) in;
+
+layout(rgba32f, binding = 0) uniform image2DArray weightsMatrices;
+layout(rgba32f, binding = 1) uniform image1DArray inpVectors;
+layout(rgba32f, binding = 2) uniform image2D inpBiases;
+layout(rgba32f, binding = 3) uniform image1DArray outVectors;
+
+layout(location = 0) uniform ivec3 weightsMatricesDimensions;
+
+void main() {
+    //check out of bounds
+    //only need to check x and z 
+    //x is the size of a block to solve
+    //z is the layer
+    uint thread_outvec_idx = gl_WorkGroupID.x * 4 + gl_LocalInvocationID.x;
+    uint thread_outvec_layer = gl_WorkGroupID.z * 16 + gl_LocalInvocationID.z;
+    if(thread_outvec_idx >= weightsMatricesDimensions.y) return;
+    if(thread_outvec_layer >= weightsMatricesDimensions.z) return;
+
+    vec4 result = vec4(0.0f); // dot product
+    for(int i = 0; i < weightsMatricesDimensions.x; i++) {
+        result += imageLoad(weightsMatrices, ivec3(i, thread_outvec_idx, thread_outvec_layer)) *
+                   imageLoad(inpVectors, ivec2(i, thread_outvec_layer));
+    }
+    //add bias
+    result += imageLoad(inpBiases, ivec2(thread_outvec_idx, thread_outvec_layer));
+
+    //activation function
+    //use relu for now
+    result = max(
+        result,
+        vec4(0.0f)
+    );
+    
+    //set value
+    imageStore(outVectors, ivec2(thread_outvec_idx, thread_outvec_layer), result);
+}

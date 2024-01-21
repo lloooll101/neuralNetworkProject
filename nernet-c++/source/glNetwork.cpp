@@ -6,17 +6,22 @@
 #include <fstream>
 #include <sstream>
 #include <map>
-
+#include <algorithm>
 
 
 bool computeShadersCompiled = false;
 enum GLComputePrograms {
-	FillRandom1DArray,
-	FillRandom4x4x1_1DArray, FillRandom4x8x1_1DArray, FillRandom8x8x1_1DArray, FillRandom16x64x1_1DArray,
-	FillRandom4x4x4_2DArray
+	FillRandom4x16x1_1DArray, FillRandom16x64x1_1DArray,
+	FP16_FillRandom4x16x1_1DArray, FP16_FillRandom16x64x1_1DArray,
+
+	FillRandom4x4x4_2DArray, FillRandom16x16x4_2DArray,
+	FP16_FillRandom4x4x4_2DArray, FP16_FillRandom16x16x4_2DArray,
+
+	FeedForwardW4D16
 };
 struct KernelSize {
 	unsigned int x, y, z;
+	KernelSize() = default;
 	KernelSize(unsigned int x, unsigned int y, unsigned int z) : x{ x }, y{ y }, z{ z } {};
 };
 std::map<GLComputePrograms, unsigned int> ProgramMap;
@@ -28,7 +33,10 @@ bool compileComputeShaders() {
 		std::stringstream ss;
 
 		stream.open(filename);
-		if (stream.fail()) return false;
+		if (stream.fail()) {
+			std::cout << "File " << filename << " could not be opened." << std::endl;
+			return false;
+		}
 		ss << stream.rdbuf();
 		stream.close();
 
@@ -47,7 +55,7 @@ bool compileComputeShaders() {
 			char* log = new char[log_length + 1];
 			log[log_length] = '\0';
 			glGetShaderInfoLog(shader, log_length, nullptr, log);
-			std::cout << log << std::endl;
+			std::cout << "In shader: " << filename << std::endl << log << std::endl;
 			delete[] log;
 			return false;
 		}
@@ -65,7 +73,7 @@ bool compileComputeShaders() {
 			char* log = new char[log_length + 1];
 			log[log_length] = '\0';
 			glGetProgramInfoLog(program, log_length, nullptr, log);
-			std::cout << log << std::endl;
+			std::cout << "In shader: " << filename << std::endl << log << std::endl;
 			delete[] log;
 			return false;
 		}
@@ -83,14 +91,17 @@ bool compileComputeShaders() {
 	bool success = false;
 
 	do {
-		if (!AddProgramToMap("resources/fillrandom1darr.comp", FillRandom1DArray, KernelSize(1, 1, 1))) break; //optimize fill random kernel
-
-		if (!AddProgramToMap("resources/4x4x1rand1darr.comp", FillRandom4x4x1_1DArray, KernelSize(4, 4, 1))) break;
-		if (!AddProgramToMap("resources/4x8x1rand1darr.comp", FillRandom4x8x1_1DArray, KernelSize(4, 8, 1))) break;
-		if (!AddProgramToMap("resources/8x8x1rand1darr.comp", FillRandom8x8x1_1DArray, KernelSize(8, 8, 1))) break;
+		if (!AddProgramToMap("resources/4x16x1rand1darr.comp", FillRandom4x16x1_1DArray, KernelSize(4, 16, 1))) break;
 		if (!AddProgramToMap("resources/16x64x1rand1darr.comp", FillRandom16x64x1_1DArray, KernelSize(16, 64, 1))) break;
+		if (!AddProgramToMap("resources/4x16x1fp16rand1darr.comp", FP16_FillRandom4x16x1_1DArray, KernelSize(4, 16, 1))) break;
+		if (!AddProgramToMap("resources/16x64x1fp16rand1darr.comp", FP16_FillRandom16x64x1_1DArray, KernelSize(16, 64, 1))) break;
 
 		if (!AddProgramToMap("resources/4x4x4rand2darr.comp", FillRandom4x4x4_2DArray, KernelSize(4, 4, 4))) break;
+		if (!AddProgramToMap("resources/16x16x4rand2darr.comp", FillRandom16x16x4_2DArray, KernelSize(16, 16, 4))) break;
+		if (!AddProgramToMap("resources/4x4x4fp16rand2darr.comp", FP16_FillRandom4x4x4_2DArray, KernelSize(4, 4, 4))) break;
+		if (!AddProgramToMap("resources/16x16x4fp16rand2darr.comp", FP16_FillRandom16x16x4_2DArray, KernelSize(16, 16, 4))) break;
+
+		if (!AddProgramToMap("resources/feedforward_w4d16.comp", FeedForwardW4D16, KernelSize(4, 1, 16))) break;
 
 		success = true;
 	} while (false);
@@ -108,8 +119,6 @@ void test() {
 			return;
 		}
 	}
-
-	
 }
 long roundUpDiv(long dividend, long divisor) {
 	return (dividend / divisor) + (dividend % divisor != 0);
@@ -129,6 +138,18 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 	if (network.layers <= 0 || network.nodesPerLayer <= 0 || network.inputs <= 0 || network.outputs <= 0 || network.networkCount <= 0) {
 		std::cout << "Invalid network configuration!" << std::endl;
 		return false;
+	}
+	
+	//adjust networks to fit
+	GLenum internalformat = GL_RGBA32F, format = GL_RGBA, type = GL_FLOAT;
+	int adjustedNetworkCount = network.networkCount;
+	adjustedNetworkCount = roundUpDiv(network.networkCount, 4);
+	network.networkCount = adjustedNetworkCount * 4;
+
+	if (network.flags.UseFP16) {
+		internalformat = GL_RGBA16F;
+		format = GL_RGBA;
+		type = GL_HALF_FLOAT;
 	}
 
 	if (network.networkCount > maxTextureLayers) {
@@ -151,7 +172,7 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.inputWeights);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, network.inputs, network.nodesPerLayer, network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalformat, network.inputs, network.nodesPerLayer, adjustedNetworkCount, 0, format, type, nullptr);
 
 	//network weights
 	for (int i = 0; i < network.layers - 1; i++) {
@@ -160,31 +181,27 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 		glBindTexture(GL_TEXTURE_2D_ARRAY, texbuf);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, network.nodesPerLayer, network.nodesPerLayer, network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);
+		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalformat, network.nodesPerLayer, network.nodesPerLayer, adjustedNetworkCount, 0, format, type, nullptr);
 		network.networkWeights.push_back(texbuf);
 	}
-	/*glBindTexture(GL_TEXTURE_2D_ARRAY, network.networkWeights);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, network.nodesPerLayer, network.nodesPerLayer, (network.layers - 1) * network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);*/
 
 	//network biases
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.networkBiases);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, network.nodesPerLayer, network.layers, network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalformat, network.nodesPerLayer, adjustedNetworkCount, network.layers, 0, format, type, nullptr);
 
 	//output weights
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.outputWeights);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, network.nodesPerLayer, network.outputs, network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalformat, network.nodesPerLayer, network.outputs, adjustedNetworkCount, 0, format, type, nullptr);
 
 	//output biases
 	glBindTexture(GL_TEXTURE_1D_ARRAY, network.outputBiases);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, GL_R32F, network.outputs, network.networkCount, 0, GL_RED, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, network.outputs, adjustedNetworkCount, 0, format, type, nullptr);
 
 	//build programs
 	if (!computeShadersCompiled) {
@@ -193,64 +210,154 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 		}
 	}
 
+	//get appropriate programs and kernel sizes
+	GLComputePrograms prog2d, prog3d;
+	KernelSize prog2d_ksize, prog3d_ksize;
+	if (network.flags.UseLargeKernels) {
+		prog2d = FillRandom16x64x1_1DArray;
+		prog3d = FillRandom16x16x4_2DArray;
+		if (network.flags.UseFP16) {
+			prog2d = FP16_FillRandom16x64x1_1DArray;
+			prog3d = FP16_FillRandom16x16x4_2DArray;
+		}
+	}
+	else {
+		prog2d = FillRandom4x16x1_1DArray;
+		prog3d = FillRandom4x4x4_2DArray;
+		if (network.flags.UseFP16) {
+			prog2d = FP16_FillRandom4x16x1_1DArray;
+			prog3d = FP16_FillRandom4x4x4_2DArray;
+		}
+	}
+	prog2d_ksize = ProgramKernelSizes[prog2d];
+	prog3d_ksize = ProgramKernelSizes[prog3d];
+
 	//create random values
 	//create true rng for seed gen
 	std::random_device trueRng;
 
 	//input weights
-	glBindImageTexture(0, network.inputWeights, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-	glUseProgram(ProgramMap[FillRandom4x4x4_2DArray]);
-	glUniform1f(0, (float)trueRng() / trueRng.max());
-	glUniform3i(1, network.inputs, network.nodesPerLayer, network.networkCount);
-	glDispatchCompute(roundUpDiv(network.inputs, 4), roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.networkCount, 4));
+	glBindImageTexture(0, network.inputWeights, 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glUseProgram(ProgramMap[prog3d]);
+	glUniform4f(0, (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max());
+	glUniform3i(1, network.inputs, network.nodesPerLayer, adjustedNetworkCount);
+	glDispatchCompute(roundUpDiv(network.inputs, prog3d_ksize.x), roundUpDiv(network.nodesPerLayer, prog3d_ksize.y), roundUpDiv(adjustedNetworkCount, prog3d_ksize.z));
 
 	//network weights
 	for (int i = 0; i < network.networkWeights.size(); i++) {
-		glBindImageTexture(0, network.networkWeights[i], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-		glUseProgram(ProgramMap[FillRandom4x4x4_2DArray]);
-		glUniform1f(0, (float)trueRng() / trueRng.max());
-		glUniform3i(1, network.nodesPerLayer, network.nodesPerLayer, network.networkCount);
-		glDispatchCompute(roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.networkCount, 4));
+		glBindImageTexture(0, network.networkWeights[i], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+		glUseProgram(ProgramMap[prog3d]);
+		glUniform4f(0, (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max());
+		glUniform3i(1, network.nodesPerLayer, network.nodesPerLayer, adjustedNetworkCount);
+		glDispatchCompute(roundUpDiv(network.nodesPerLayer, prog3d_ksize.x), roundUpDiv(network.nodesPerLayer, prog3d_ksize.y), roundUpDiv(adjustedNetworkCount, prog3d_ksize.z));
 	}
 
 	//network biases
-	glBindImageTexture(0, network.networkBiases, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-	glUseProgram(ProgramMap[FillRandom4x4x4_2DArray]);
-	glUniform1f(0, (float)trueRng() / trueRng.max());
-	glUniform3i(1, network.nodesPerLayer, network.layers, network.networkCount);
-	glDispatchCompute(roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.layers, 4), roundUpDiv(network.networkCount, 4));
+	glBindImageTexture(0, network.networkBiases, 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glUseProgram(ProgramMap[prog3d]);
+	glUniform4f(0, (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max());
+	glUniform3i(1, network.nodesPerLayer, network.layers, adjustedNetworkCount);
+	glDispatchCompute(roundUpDiv(network.nodesPerLayer, prog3d_ksize.x), roundUpDiv(adjustedNetworkCount, prog3d_ksize.y), roundUpDiv(network.layers, prog3d_ksize.z));
 
 	//output weights
-	glBindImageTexture(0, network.outputWeights, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-	glUseProgram(ProgramMap[FillRandom4x4x4_2DArray]);
-	glUniform1f(0, (float)trueRng() / trueRng.max());
-	glUniform3i(1, network.nodesPerLayer, network.outputs, network.networkCount);
-	glDispatchCompute(roundUpDiv(network.nodesPerLayer, 4), roundUpDiv(network.outputs, 4), roundUpDiv(network.networkCount, 4));
+	glBindImageTexture(0, network.outputWeights, 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glUseProgram(ProgramMap[prog3d]);
+	glUniform4f(0, (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max());
+	glUniform3i(1, network.nodesPerLayer, network.outputs, adjustedNetworkCount);
+	glDispatchCompute(roundUpDiv(network.nodesPerLayer, prog3d_ksize.x), roundUpDiv(network.outputs, prog3d_ksize.y), roundUpDiv(adjustedNetworkCount, prog3d_ksize.z));
 
 	//output biases
-	glBindImageTexture(0, network.outputBiases, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-	glUseProgram(ProgramMap[FillRandom1DArray]);
-	glUniform1f(0, (float)trueRng() / trueRng.max());
-	glDispatchCompute(network.outputs, network.networkCount, 1);
+	glBindImageTexture(0, network.outputBiases, 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glUseProgram(ProgramMap[prog3d]);
+	glUniform4f(0, (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max(), (float)trueRng() / trueRng.max());
+	glDispatchCompute(roundUpDiv(network.outputs, prog2d_ksize.x), roundUpDiv(adjustedNetworkCount, prog2d_ksize.y), 1);
 
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	////test
+	//test
 	/*float* testbuf = new float[network.inputs * network.nodesPerLayer * network.networkCount];
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.inputWeights);
-	glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RED, GL_FLOAT, testbuf);
+	glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, format, type, testbuf);
 	delete[] testbuf;*/
 
 	return true;
 }
+
+//inpbuf should be 1d_array texture with inputs * (networks/4) dimensions with the texturees holding 4 floats per pixel (gl_rgba32f)
+//outbuf is the same thing but with outpus instead of inputs
 bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsigned int outbuf) {
+	//how to solve a neural network tutorial
+	//
+	// 1. build double temp buffers
+	//    temp buffer should have the width of max(outputs, nodesPerLayer) 
+	// 
+	// Note: step forward function = sigmoid((weights*inpvector) + biases)
+	// 
+	// 2. repeatedly solve step forward function
+	//
+
+	//compile shaders
+	if (!computeShadersCompiled) {
+		if (!compileComputeShaders()) {
+			return false;
+		}
+	}
+
+	//get programs
+	GLComputePrograms ffprogram;
+	KernelSize ffprogram_ksize;
+	ffprogram = FeedForwardW4D16;
+	ffprogram_ksize = ProgramKernelSizes[ffprogram];
+
+	//building buffers
+	GLenum internalformat = GL_RGBA32F, format = GL_RGBA, type = GL_FLOAT;
+	if (network.flags.UseFP16) {
+		internalformat = GL_RGBA16F;
+		format = GL_RGBA;
+		type = GL_HALF_FLOAT;
+	}
+
+	unsigned int tempBuffers[2];
+	glGenTextures(2, tempBuffers);
+
+	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[0]);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.layers / 4, 0, format, type, nullptr);
+
+	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[1]);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.layers / 4, 0, format, type, nullptr);
+
+	//create swapchain (vulkan reference????)
+	int currentWriteBuffer = 0;
+
+	//start stepping forward
+	//start with input layer
+	glBindImageTexture(0, network.inputWeights, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
+	glBindImageTexture(1, inpbuf, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
+	glBindImageTexture(2, network.networkBiases, 0, GL_FALSE, 0, GL_READ_ONLY, internalformat);
+	glBindImageTexture(3, tempBuffers[currentWriteBuffer], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glUseProgram(ProgramMap[FeedForwardW4D16]);
+	glUniform3i(0, network.inputs, network.nodesPerLayer, network.networkCount/4);
+	glDispatchCompute(roundUpDiv(network.nodesPerLayer, ffprogram_ksize.x), 1, roundUpDiv(network.networkCount, ffprogram_ksize.z));
+	
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	//test
+	float* testbuf = new float[std::max(network.nodesPerLayer, network.outputs) * network.layers];
+	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[currentWriteBuffer]);
+	glGetTexImage(GL_TEXTURE_1D_ARRAY, 0, format, type, testbuf);
+	delete[] testbuf;
+
 	return false;
 }
 bool deleteNetworkGroup(glNeuralNetworkGroup& network) {
-	glDeleteTextures(1, &(network.inputWeights));
+	//glDeleteTextures(1, &(network.inputWeights));
 	//glDeleteTextures(1, &(network.networkWeights));
-	glDeleteTextures(1, &(network.networkBiases));
-	glDeleteTextures(1, &(network.outputWeights));
-	glDeleteTextures(1, &(network.outputBiases));
-	return true;
+	//glDeleteTextures(1, &(network.networkBiases));
+	//glDeleteTextures(1, &(network.outputWeights));
+	//glDeleteTextures(1, &(network.outputBiases));
+	return false;
 }

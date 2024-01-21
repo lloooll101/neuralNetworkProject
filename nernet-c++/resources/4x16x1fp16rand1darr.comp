@@ -1,8 +1,8 @@
 #version 460 core
 
-layout (local_size_x = 16, local_size_y = 64, local_size_z = 1) in;
+layout (local_size_x = 4, local_size_y = 8, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image1DArray matrix;
+layout(rgba16f, binding = 0) uniform image1DArray matrix;
 
 layout( location = 0 ) uniform vec4 inpSeed;
 layout( location = 1 ) uniform ivec2 matrixDimensions;
@@ -14,7 +14,7 @@ float gold_noise(in vec2 xy, in float seed){
 }
 
 void main() {
-    ivec2 texCoord = ivec2(gl_WorkGroupID.x * 16, gl_WorkGroupID.y * 64) + ivec2(gl_LocalInvocationID.xy);
+    ivec2 texCoord = ivec2(gl_WorkGroupID.x * 4, gl_WorkGroupID.y * 8) + ivec2(gl_LocalInvocationID.xy);
     if(texCoord.x >= matrixDimensions.x || texCoord.y >= matrixDimensions.y) {
         return;
     }
