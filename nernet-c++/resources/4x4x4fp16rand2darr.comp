@@ -9,8 +9,12 @@ layout( location = 1 ) uniform ivec3 matrixDimensions;
 
 float PHI = 1.61803398874989484820459;  // Golden Ratio   
 
+float sfract(float x) {
+    return fract(x) - float(x < 0.0f);
+} 
+
 float gold_noise(in vec3 xyz, in float seed){
-    return fract(tan(distance(xyz*PHI, xyz)*seed)*xyz.x);
+    return sfract(tan(distance(xyz*PHI, xyz)*seed)*xyz.x);
 }
 
 void main() {
@@ -18,13 +22,12 @@ void main() {
     if(texCoord.x >= matrixDimensions.x || texCoord.y >= matrixDimensions.y || texCoord.z >= matrixDimensions.z) {
         return;
     }
-    vec3 texCoordF = vec3(texCoord) / vec3(matrixDimensions);
     imageStore(matrix, texCoord, 
         vec4(
-            gold_noise(texCoordF + vec3(0.1f), inpSeed.x), 
-            gold_noise(texCoordF + vec3(0.1f), inpSeed.y), 
-            gold_noise(texCoordF + vec3(0.1f), inpSeed.z), 
-            gold_noise(texCoordF + vec3(0.1f), inpSeed.w)
+            gold_noise(vec3(texCoord) + vec3(0.1f), inpSeed.x), 
+            gold_noise(vec3(texCoord) + vec3(0.2f), inpSeed.y), 
+            gold_noise(vec3(texCoord) + vec3(0.3f), inpSeed.z), 
+            gold_noise(vec3(texCoord) + vec3(0.4f), inpSeed.w)
         )
     );
 }

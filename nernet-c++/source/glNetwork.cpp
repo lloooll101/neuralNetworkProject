@@ -275,10 +275,10 @@ bool buildNetworkGroup(glNeuralNetworkGroup& network) {
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	//test
-	/*float* testbuf = new float[network.inputs * network.nodesPerLayer * network.networkCount];
+	float* testbuf = new float[network.inputs * network.nodesPerLayer * network.networkCount];
 	glBindTexture(GL_TEXTURE_2D_ARRAY, network.inputWeights);
 	glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, format, type, testbuf);
-	delete[] testbuf;*/
+	delete[] testbuf;
 
 	return true;
 }
@@ -295,6 +295,23 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	// 
 	// 2. repeatedly solve step forward function
 	//
+
+	//create test inputs
+	unsigned int dbginp;
+	glGenTextures(1, &dbginp);
+	glBindTexture(GL_TEXTURE_1D_ARRAY, dbginp);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	
+	std::random_device rd;
+	float* randomNumbers = new float[network.inputs * network.networkCount];
+	for (int i = 0; i < network.inputs * network.networkCount; i++) {
+		randomNumbers[i] = (float)rd() / rd.max();
+	}
+
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, GL_RGBA32F, network.inputs, network.networkCount / 4, 0, GL_RGBA, GL_FLOAT, randomNumbers);
+	//delete[] randomNumbers;
+
 
 	//compile shaders
 	if (!computeShadersCompiled) {
@@ -323,20 +340,21 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[0]);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.layers / 4, 0, format, type, nullptr);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.networkCount / 4, 0, format, type, nullptr);
 
 	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[1]);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.layers / 4, 0, format, type, nullptr);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalformat, std::max(network.nodesPerLayer, network.outputs), network.networkCount / 4, 0, format, type, nullptr);
 
 	//create swapchain (vulkan reference????)
 	int currentWriteBuffer = 0;
+	int currentReadBuffer = 0;
 
 	//start stepping forward
 	//start with input layer
 	glBindImageTexture(0, network.inputWeights, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
-	glBindImageTexture(1, inpbuf, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
+	glBindImageTexture(1, /*inpbuf*/ dbginp, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(2, network.networkBiases, 0, GL_FALSE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(3, tempBuffers[currentWriteBuffer], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
 	glUseProgram(ProgramMap[FeedForwardW4D16]);
@@ -346,7 +364,7 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	//test
-	float* testbuf = new float[std::max(network.nodesPerLayer, network.outputs) * network.layers];
+	float* testbuf = new float[std::max(network.nodesPerLayer, network.outputs) * network.networkCount];
 	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[currentWriteBuffer]);
 	glGetTexImage(GL_TEXTURE_1D_ARRAY, 0, format, type, testbuf);
 	delete[] testbuf;

@@ -4,6 +4,7 @@
 #include "glInit.hpp"
 #include "glNetwork.hpp"
 
+
 //steps:
 // create random networks
 // solve networks 
@@ -24,6 +25,7 @@ int main() {
 	nn.outputs = 8;
 	nn.networkCount = 16;
 	bool success = buildNetworkGroup(nn);
+
 	success = evalNetworkGroup(nn, 0, 0);
 
 	//test();

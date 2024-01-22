@@ -9,6 +9,15 @@ layout(rgba32f, binding = 3) uniform image1DArray outVectors;
 
 layout(location = 0) uniform ivec3 weightsMatricesDimensions;
 
+vec4 ELU(vec4 inp) {
+    return vec4(
+        inp.x > 0.0f ? inp.x : exp(inp.x) - 1.0f,
+        inp.y > 0.0f ? inp.y : exp(inp.y) - 1.0f,
+        inp.z > 0.0f ? inp.z : exp(inp.z) - 1.0f,
+        inp.w > 0.0f ? inp.w : exp(inp.w) - 1.0f
+    );
+}
+
 void main() {
     //check out of bounds
     //only need to check x and z 
@@ -28,11 +37,16 @@ void main() {
     result += imageLoad(inpBiases, ivec2(thread_outvec_idx, thread_outvec_layer));
 
     //activation function
-    //use relu for now
-    result = max(
-        result,
-        vec4(0.0f)
-    );
+    //really doesnt matter when using a natural selection training algorithm but use anyways
+
+    //relu
+    //result = max(
+    //    result,
+    //    vec4(0.0f)
+    //);
+
+    //elu
+    result = ELU(result);
     
     //set value
     imageStore(outVectors, ivec2(thread_outvec_idx, thread_outvec_layer), result);
