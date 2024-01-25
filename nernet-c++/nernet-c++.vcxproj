@@ -151,8 +151,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="glbufferutils.cpp" />
     <ClCompile Include="source\gl.c" />
+    <ClCompile Include="source\glbufferutils.cpp" />
     <ClCompile Include="source\glNetwork.cpp" />
     <ClCompile Include="source\init.cpp" />
     <ClCompile Include="source\main.cpp" />
@@ -169,11 +169,11 @@
     <None Include="resources\feedforward_w4d16.comp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glBufferUtils.hpp" />
     <ClInclude Include="includes\glad\gl.h" />
     <ClInclude Include="includes\GLFW\glfw3.h" />
     <ClInclude Include="includes\GLFW\glfw3native.h" />
     <ClInclude Include="includes\KHR\khrplatform.h" />
+    <ClInclude Include="source\glBufferUtils.hpp" />
     <ClInclude Include="source\glInit.hpp" />
     <ClInclude Include="source\glNetwork.hpp" />
   </ItemGroup>

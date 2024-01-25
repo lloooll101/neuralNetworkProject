@@ -60,7 +60,7 @@
     <ClCompile Include="source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="glbufferutils.cpp">
+    <ClCompile Include="source\glbufferutils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -112,7 +112,7 @@
     <ClInclude Include="source\glNetwork.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="glBufferUtils.hpp">
+    <ClInclude Include="source\glBufferUtils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

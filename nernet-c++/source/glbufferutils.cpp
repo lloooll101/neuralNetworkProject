@@ -42,10 +42,22 @@ void DeleteArrayBuffer(unsigned int buffer) {
 void Fill1DArrayRandom(unsigned int buffer, int width, int layers, unsigned long long seed, bool fp16 = false) {
     GLComputePrograms rngkernel = fp16 ? FP16_FillRandom4x16x1_1DArray : FillRandom4x16x1_1DArray;
     KernelSize kernelSize = ProgramKernelSizes[rngkernel];
+    std::mt19937 mersenne_twister(seed);
+    auto randFloat = [&]() -> float {
+        return (float)mersenne_twister() / mersenne_twister.max();
+    };
 
-    glBindImageTexture(0, )
+    glBindImageTexture(0, buffer, 0, GL_TRUE, 0, GL_WRITE_ONLY, fp16 ? GL_RGBA16F : GL_RGBA32F);
+    glUseProgram(ProgramMap[rngkernel]);
+    glUniform4f(0, randFloat(), randFloat(), randFloat(), randFloat());
+    glUniform2i(1, width, roundUpDiv(layers, 4));
+    int dispatchx = roundUpDiv(width, kernelSize.x);
+    int dispatchy = roundUpDiv(roundUpDiv(layers, 4), kernelSize.y);
+    glDispatchCompute(dispatchx, dispatchy, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 void Fill1DArrayRandom(unsigned int buffer, int width, int layers, bool fp16 = false) {
-
+    std::random_device rd;
+    Fill1DArrayRandom(buffer, width, layers, rd(), fp16);
 }
