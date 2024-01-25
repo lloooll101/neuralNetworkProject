@@ -297,11 +297,11 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	//
 
 	//create test inputs
-	unsigned int dbginp;
+	/*unsigned int dbginp;
 	glGenTextures(1, &dbginp);
 	glBindTexture(GL_TEXTURE_1D_ARRAY, dbginp);
 	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);*/
 	
 	std::random_device rd;
 	float* randomNumbers = new float[network.inputs * network.networkCount];
@@ -350,6 +350,7 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	//create swapchain (vulkan reference????)
 	int currentWriteBuffer = 0;
 	int currentReadBuffer = 1;
+	
 	auto swap_rw = [&]() {
 		currentWriteBuffer = currentWriteBuffer ? 0 : 1;
 		currentReadBuffer = currentReadBuffer ? 0 : 1;
@@ -357,7 +358,7 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	//start stepping forward
 	//start with input layer
 	glBindImageTexture(0, network.inputWeights, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
-	glBindImageTexture(1, /*inpbuf*/ dbginp, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
+	glBindImageTexture(1, /*inpbuf*/ inpbuf, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(2, network.networkBiases, 0, GL_FALSE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(3, tempBuffers[currentWriteBuffer], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
 	glUseProgram(ProgramMap[FeedForwardW4D16]);
@@ -385,7 +386,8 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 	glBindImageTexture(0, network.outputWeights, 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(1, /*inpbuf*/ tempBuffers[currentReadBuffer], 0, GL_TRUE, 0, GL_READ_ONLY, internalformat);
 	glBindImageTexture(2, network.outputBiases, 0, GL_FALSE, 0, GL_READ_ONLY, internalformat);
-	glBindImageTexture(3, tempBuffers[currentWriteBuffer], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	//glBindImageTexture(3, tempBuffers[currentWriteBuffer], 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
+	glBindImageTexture(3, outbuf, 0, GL_TRUE, 0, GL_WRITE_ONLY, internalformat);
 	glUseProgram(ProgramMap[FeedForwardW4D16]);
 	glUniform3i(0, network.nodesPerLayer, network.outputs, network.networkCount / 4);
 	glDispatchCompute(roundUpDiv(network.nodesPerLayer, ffprogram_ksize.x), 1, roundUpDiv(network.networkCount, ffprogram_ksize.z));
@@ -394,11 +396,11 @@ bool evalNetworkGroup(glNeuralNetworkGroup& network, unsigned int inpbuf, unsign
 
 
 	//test
-	float* testbuf = new float[network.outputs * network.networkCount];
-	//glBindTexture(GL_TEXTURE_1D_ARRAY, );
-	glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[currentWriteBuffer]);
-	glGetTexImage(GL_TEXTURE_1D_ARRAY, 0, format, type, testbuf);
-	delete[] testbuf;
+	//float* testbuf = new float[network.outputs * network.networkCount];
+	////glBindTexture(GL_TEXTURE_1D_ARRAY, );
+	//glBindTexture(GL_TEXTURE_1D_ARRAY, tempBuffers[currentWriteBuffer]);
+	//glGetTexImage(GL_TEXTURE_1D_ARRAY, 0, format, type, testbuf);
+	//delete[] testbuf;
 
 	return false;
 }

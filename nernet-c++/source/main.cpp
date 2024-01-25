@@ -19,11 +19,11 @@ int main() {
 	glNeuralNetworkGroup nn;
 	nn.flags.UseLargeKernels = false;
 	nn.flags.UseFP16 = false;
-	nn.inputs = 8;
-	nn.layers = 2;
-	nn.nodesPerLayer = 16;
-	nn.outputs = 8;
-	nn.networkCount = 16;
+	nn.inputs = 16;
+	nn.layers = 4;
+	nn.nodesPerLayer = 64;
+	nn.outputs = 4;
+	nn.networkCount = 1024;
 	bool success = buildNetworkGroup(nn);
 
 	success = evalNetworkGroup(nn, 0, 0);
