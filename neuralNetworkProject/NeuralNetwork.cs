@@ -62,7 +62,6 @@ namespace Project.Network
             {
                 this.ID += Convert.ToChar(random.Next(65, 91));
             }
-
         }
 
         //Evaluates the network
@@ -109,12 +108,6 @@ namespace Project.Network
             }
 
             return vector;
-        }
-
-        //TODO: Add export and import
-        public override string ToString()
-        {
-            return ID;
         }
     }
 }

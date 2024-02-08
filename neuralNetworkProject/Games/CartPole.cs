@@ -45,6 +45,7 @@ namespace Games.CartPole
             this.angle = angle;
             this.angularVelocity = angularVelocity;
 
+            this.score = 0;
             this.action = 0;
         }
 
@@ -67,10 +68,19 @@ namespace Games.CartPole
 
         public Vector<float> getInput()
         {
-            float[] inputArray = [];
+            float[] inputArray = [cartX, cartVelocity, angle, angularVelocity];
             Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
 
             return inputs;
+        }
+
+        public float getScoreChange()
+        {
+            //Score based on time
+            //return 1;
+
+            //Score based on stability
+            return (1 - Math.Abs(angle) * 0.05f - Math.Abs(cartX) * 0.01f - Math.Abs(angularVelocity) * 0.10f - Math.Abs(cartVelocity) * 0.10f);
         }
 
         //Ticks the game
@@ -102,12 +112,9 @@ namespace Games.CartPole
                 return false;
             }
 
-            //Score based on time
-            score += 1;
-            return true;
+            score += getScoreChange();
 
-            //Score based on stability
-            score += (1 - Math.Abs(angle) - Math.Abs(cartX) - Math.Abs(cartVelocity) - Math.Abs(angularVelocity));
+            return true;
         }
     }
 }

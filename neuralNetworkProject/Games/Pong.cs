@@ -18,6 +18,8 @@ namespace Games.Pong
         public float score;
         private int action;
 
+        private bool hasBounced = false;
+
         //Constructor method
         public Pong(int Xsize, int Ysize)
         {
@@ -41,7 +43,7 @@ namespace Games.Pong
             this.ball.reset(Xsize / 2, Ysize / 2, Xvel, Yvel);
 
             //Place the paddle on the screen, and set its size
-            this.paddle.reset(Xsize / 2, Ysize / 10, Xsize / 10);
+            this.paddle.reset(Xsize / 2, Xsize / 10);
 
             this.score = 0;
             this.action = 0;
@@ -75,6 +77,71 @@ namespace Games.Pong
             return inputs;
         }
 
+        public float getScoreChange()
+        {
+            //Score based on number of bounces
+            /*
+            if (hasBounced)
+            {
+                hasBounced = false;
+                return 1;
+            }
+            */
+
+            //Score based on survival time
+            //return 1;
+
+            //Score based on action
+            float collideX = getCollisionPoint();
+
+            //If collision is to the left
+            if (collideX < paddle.X - paddle.width)
+            {
+                if (action == -1)
+                {
+                    return 1;
+                }
+                return -1;
+            }
+            //If collision is to the right
+            else if (collideX > paddle.X + paddle.width)
+            {
+                if (action == 1)
+                {
+                    return 1;
+                }
+                return -1;
+            }
+            //If collision is at the paddle
+            else
+            {
+                if (action == 0)
+                {
+                    return 2;
+                }
+                return -2;
+            }
+        }
+
+        public float getCollisionPoint()
+        {
+            float collisionY = 0;
+            if (ball.Yvel > 0)
+            {
+                collisionY = Ysize * 2;
+            }
+
+            float ticks = (collisionY - ball.Y) / ball.Yvel;
+            float collisionX = ticks * ball.Xvel + ball.X;
+
+            if (mod((int)Math.Floor(collisionX / Xsize), Xsize) == 0)
+            {
+                return mod(collisionX, Xsize);
+            }
+
+            return Xsize - mod(collisionX, Xsize);
+        }
+
         //Ticks the game
         //Return represents if the game is still valid
         public bool tick()
@@ -83,25 +150,23 @@ namespace Games.Pong
             paddle.X += action * 3;
 
             //Check to see if the ball needs to be checked for collision
-            if (ball.Y + ball.Yvel < paddle.Y)
+            if (ball.Y + ball.Yvel < 0)
             {
-                //Calcuate the subtick and the x position of the potential collision
-                float collideSubtick = (paddle.Y - ball.Y) / ball.Yvel;
-                float collideX = ball.X + ball.Xvel * collideSubtick;
+                float collideX = getCollisionPoint();
 
                 //Check if the paddle was in the path of the ball
                 if ((collideX < paddle.X + paddle.width) && (collideX > paddle.X - paddle.width))
                 {
-                    //Increment score
-                    score += 1;
-
                     //Update the ball position and velocity
                     ball.X += ball.Xvel;
                     ball.Y += ball.Yvel;
 
-                    ball.Y = -(ball.Y - paddle.Y) + paddle.Y;
+                    ball.Y = -ball.Y;
 
-                    ball.Yvel *= -1;
+                    ball.Yvel = -ball.Yvel;
+
+                    //Set the hasBounced tag
+                    hasBounced = true;
                 }
                 //If the paddle was not in the path, update the score based on the distance and return false
                 else
@@ -137,7 +202,14 @@ namespace Games.Pong
                 ball.Yvel *= -1;
             }
 
+            score += getScoreChange();
+
             return true;
+        }
+
+        public float mod(float number, float modulus)
+        {
+            return ((number % modulus) + modulus) % modulus;
         }
     }
 
@@ -166,18 +238,16 @@ namespace Games.Pong
         public class Paddle
         {
             public float X;
-            public float Y;
             public int width;
 
             public Paddle()
             {
-                reset(0, 0, 0);
+                reset(0, 0);
             }
 
-            public void reset(float X, float Y, int width)
+            public void reset(float X, int width)
             {
                 this.X = X;
-                this.Y = Y;
                 this.width = width;
             }
         }
