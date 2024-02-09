@@ -54,9 +54,9 @@ namespace Project
 
             long lastPrintout = 0;
 
-            while (totalTicks < 10000000000)
+            while (totalTicks < 1000000)
             {
-                if(lastPrintout + 10000000 < totalTicks)
+                if(lastPrintout + 100 < totalTicks)
                 {
                     //Do printout
                     float score = 0;

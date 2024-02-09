@@ -59,7 +59,9 @@ namespace Project.Network
 
             Vector<float> output = Vector<float>.Build.Dense(outputs);
 
-            float[] matchbox = (float[])matchboxes.GetValue(getIndex(input));
+            int[] index = getIndex(input);
+
+            float[] matchbox = (float[])matchboxes.GetValue(index);
 
             float selectedOutput = (float)random.NextDouble() * matchbox.Sum();
 
@@ -99,9 +101,7 @@ namespace Project.Network
 
             float[] weights = (float[])matchboxes.GetValue(index);
 
-            weights[previousAction] += scoreChange;
-
-            weights[previousAction] = Math.Max(weights[previousAction], 1);
+            weights[previousAction] = Math.Max(weights[previousAction] + scoreChange, 1);
 
             matchboxes.SetValue(weights, index);
         }
