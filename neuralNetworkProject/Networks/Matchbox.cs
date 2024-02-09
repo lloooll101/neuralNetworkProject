@@ -68,6 +68,7 @@ namespace Project.Network
                 if (selectedOutput < matchbox[i])
                 {
                     output[i] = 1;
+                    previousOutput = output;
                     return output;
                 }
 
@@ -75,6 +76,7 @@ namespace Project.Network
             }
 
             output[outputs - 1] = 1;
+            previousOutput = output;
             return output;
         }
 
