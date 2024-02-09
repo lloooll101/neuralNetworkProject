@@ -9,7 +9,7 @@ namespace Project
 {
     class Program
     {
-        public static int totalTicks = 0;
+        public static long totalTicks = 0;
 
         static void Main(string[] args)
         {
@@ -41,7 +41,7 @@ namespace Project
             };
 
             //Create matchbox model
-            Matchbox matchbox = new Matchbox(Pong.inputs, Pong.outputs, 10, limits);
+            Matchbox matchbox = new Matchbox(Pong.inputs, Pong.outputs, 5, limits);
 
             //Create the list of angles to test
             float[] angles = new float[numberOfAngles];
@@ -52,9 +52,9 @@ namespace Project
 
             Pong pongGame = new Pong(500, 500);
 
-            int lastPrintout = 0;
+            long lastPrintout = 0;
 
-            while (totalTicks < 1000000000)
+            while (totalTicks < 10000000000)
             {
                 if(lastPrintout + 10000000 < totalTicks)
                 {
