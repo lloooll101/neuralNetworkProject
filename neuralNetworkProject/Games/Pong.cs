@@ -12,8 +12,8 @@ namespace Games.Pong
         private int Xsize;
         private int Ysize;
 
-        private Ball ball;
-        private Paddle paddle;
+        public Ball ball;
+        public Paddle paddle;
 
         public float score;
         private int action;

@@ -15,16 +15,18 @@ namespace Project
 {
     class Program
     {
+        public static int totalTicks = 0;
+
         static void Main(string[] args)
         {
             //Settings
-            int generations = 25;
-            int netsPerGen = 250;
+            int generations = 100;
+            int netsPerGen = 200;
 
             int ticks = 2000;
 
-            int layers = 2;
-            int nodesPerLayer = 3;
+            int layers = 1;
+            int nodesPerLayer = 4;
             int inputs = 5;
             int outputs = 3;
 
@@ -84,10 +86,15 @@ namespace Project
                 for(int k = 0; k < netsPerGen; k++)
                 {
                     scores[k] = scoresTasks[k].Result;
+
                 }
 
-                genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
-                Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+                //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+                //Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
+
+                //CSV version
+                genLogs.WriteLine(i + "," + totalTicks + "," + scores.Max());
+                Console.WriteLine(i + "," + totalTicks + "," + scores.Max());
 
                 networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
             }
@@ -121,37 +128,24 @@ namespace Project
 
                 //Keeps track of the total score of the network
                 float score = 0;
-                Pong pongGame = new Pong(500, 500, 5, 0.0f);
+                Pong pongGame = new Pong(500, 500);
 
                 for (int i = 0; i < angles.Length; i++)
                 {
-                    pongGame.reset(500, 500, 5, angles[i]);
+                    pongGame.reset(5, angles[i]);
 
                     for (int j = 0; j < ticks; j++)
                     {
+                        totalTicks++;
+
                         //Create the input vector
-                        float[] inputArray = [pongGame.ball.X, pongGame.ball.Y, pongGame.ball.Xvel, pongGame.ball.Yvel, pongGame.paddle.X];
-                        Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
+                        Vector<float> inputs = pongGame.getInput();
 
                         //Evaluate the network
                         Vector<float> outputs = network.evaluateNetwork(inputs);
 
                         //Set the action of the network
-                        switch (outputs.MaximumIndex())
-                        {
-                            case 0:
-                                pongGame.setAction("left");
-                                break;
-                            case 1:
-                                pongGame.setAction("right");
-                                break;
-                            case 2:
-                                pongGame.setAction("");
-                                break;
-                            default:
-                                pongGame.setAction("");
-                                break;
-                        }
+                        pongGame.setAction(outputs);
 
                         //Tick the game, and break if the ball falls
                         if (!pongGame.tick())
@@ -183,33 +177,20 @@ namespace Project
             {
                 StreamWriter gameLog = new StreamWriter(Path.Combine(gamesPath, "games-" + i + ".txt"));
 
-                Pong pongGame = new Pong(500, 500, 5, angles[i]);
+                Pong pongGame = new Pong(500, 500);
+
+                pongGame.reset(5, angles[i]);
 
                 for (int j = 0;; j++)
                 {
                     //Create the input vector
-                    float[] inputArray = [pongGame.ball.X, pongGame.ball.Y, pongGame.ball.Xvel, pongGame.ball.Yvel, pongGame.paddle.X];
-                    Vector<float> inputs = Vector<float>.Build.DenseOfArray(inputArray);
+                    Vector<float> inputs = pongGame.getInput();
 
                     //Evaluate the network
                     Vector<float> outputs = network.evaluateNetwork(inputs);
 
                     //Set the action of the network
-                    switch (outputs.MaximumIndex())
-                    {
-                        case 0:
-                            pongGame.setAction("left");
-                            break;
-                        case 1:
-                            pongGame.setAction("right");
-                            break;
-                        case 2:
-                            pongGame.setAction("");
-                            break;
-                        default:
-                            pongGame.setAction("");
-                            break;
-                    }
+                    pongGame.setAction(outputs);
 
                     gameLog.WriteLine(pongGame.ball.X + "," + pongGame.ball.Y + "," + pongGame.paddle.X);
 

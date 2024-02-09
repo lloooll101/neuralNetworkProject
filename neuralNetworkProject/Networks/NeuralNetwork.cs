@@ -18,8 +18,6 @@ namespace Project.Network
         public int inputs;
         public int outputs;
 
-        public string ID = "";
-
         //Create random network
         public NeuralNetwork(int layers, int nodesPerLayer, int inputs, int outputs)
         {
@@ -54,14 +52,6 @@ namespace Project.Network
             this.nodesPerLayer = nodesPerLayer;
             this.inputs = inputs;
             this.outputs = outputs;
-
-            //Generate a random ID
-            //Used to debug or something IDK
-            Random random = new Random();
-            for (int i = 0; i < 5; i++)
-            {
-                this.ID += Convert.ToChar(random.Next(65, 91));
-            }
         }
 
         //Evaluates the network
