@@ -113,39 +113,6 @@ namespace Project
                 }
             }
 
-            /*
-            //Run each generation
-            for (int i = 0; i < generations; i++)
-            {
-                for (int j = 0; j < netsPerGen; j++)
-                {
-                    //string networkPath = Path.Combine(genPath, "network-" + j);
-                    //Directory.CreateDirectory(networkPath);
-
-                    //scoresTasks[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    scoresTasks[j] = runNetwork(networks[j], angles, ticks);
-                }
-
-                for (int k = 0; k < netsPerGen; k++)
-                {
-                    scores[k] = scoresTasks[k].Result;
-
-                }
-
-                //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
-                //Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
-
-                //CSV version
-                genLogs.WriteLine(i + "," + totalTicks + "," + scores.Max());
-                Console.WriteLine(i + "," + totalTicks + "," + scores.Max());
-
-                //networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
-                networks = trainer.generateNextGen(networks, scores, 0.1f);
-            }
-            */
-
-            //Output the document path for ease of navigation
-            //Also open up the output folder
             Console.WriteLine(docPath);
             Process.Start("explorer.exe", docPath);
 
