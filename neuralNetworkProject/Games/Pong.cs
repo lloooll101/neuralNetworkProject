@@ -115,11 +115,7 @@ namespace Games.Pong
             //If collision is at the paddle
             else
             {
-                if (action == 0)
-                {
-                    return 2;
-                }
-                return -2;
+                return 2;
             }
         }
 
