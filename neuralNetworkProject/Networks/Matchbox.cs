@@ -28,15 +28,15 @@ namespace Project.Network
             int[] dimensions = new int[inputs];
             Array.Fill(dimensions, buckets);
 
-            float[] defaultOutput = new float[outputs];
-            Array.Fill(defaultOutput, 3);
-
             matchboxes = Array.CreateInstance(typeof(float[]), dimensions);
 
             int[] index = new int[inputs];
 
             for (int i = 0; i < Math.Pow(buckets, inputs); i++)
             {
+                float[] defaultOutput = new float[outputs];
+                Array.Fill(defaultOutput, 3);
+
                 matchboxes.SetValue(defaultOutput, index);
 
                 index[inputs - 1]++;
@@ -74,10 +74,7 @@ namespace Project.Network
 
                 selectedOutput -= matchbox[i];
             }
-
-            output[outputs - 1] = 1;
-            previousOutput = output;
-            return output;
+            throw new Exception();
         }
 
         public int[] getIndex(Vector<float> input)
