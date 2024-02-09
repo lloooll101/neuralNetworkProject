@@ -74,7 +74,10 @@ namespace Project.Network
 
                 selectedOutput -= matchbox[i];
             }
-            throw new Exception();
+
+            output[outputs - 1] = 1;
+            previousOutput = output;
+            return output;
         }
 
         public int[] getIndex(Vector<float> input)
