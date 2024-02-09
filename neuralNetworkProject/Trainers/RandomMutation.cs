@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Distributions;
+﻿using MathNet.Numerics.Distributions;
 
 using Project.Network;
 
@@ -8,7 +7,7 @@ namespace Trainers.RandomMutation
     internal class MutationTrainer
     {
         public MutationTrainer() { }
-        
+
         public NeuralNetwork[] generateNextGen(NeuralNetwork[] networks, float[] scores, float percentile, float mutationRate)
         {
             Random random = new Random();

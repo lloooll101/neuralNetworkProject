@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra;
+﻿using MathNet.Numerics.LinearAlgebra;
 
 namespace Games.CartPole
 {
@@ -107,7 +106,7 @@ namespace Games.CartPole
             angularVelocity = angularAcceleration * dt;
 
             //Check if the pole is out of bounds
-            if(Math.Abs(cartX) > XLimit || Math.Abs(angle) > angleLimit)
+            if (Math.Abs(cartX) > XLimit || Math.Abs(angle) > angleLimit)
             {
                 return false;
             }

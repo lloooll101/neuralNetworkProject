@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra;
+﻿using MathNet.Numerics.LinearAlgebra;
 
 namespace Games.CartPole
 {
@@ -93,7 +92,7 @@ namespace Games.CartPole
                 {
                     scoreChange += 1;
                 }
-                else if(openingPosition - yPos > 5 && yVel > 0)
+                else if (openingPosition - yPos > 5 && yVel > 0)
                 {
                     scoreChange += 1;
                 }
@@ -118,7 +117,7 @@ namespace Games.CartPole
 
             xDistance--;
 
-            if(xDistance <= 0)
+            if (xDistance <= 0)
             {
                 //TODO: Check collision
                 if (Math.Abs(openingPosition - yPos) < 5)

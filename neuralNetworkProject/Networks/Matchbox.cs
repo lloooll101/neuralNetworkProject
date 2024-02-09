@@ -1,5 +1,4 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Distributions;
 
 namespace Project.Network
 {
@@ -36,13 +35,13 @@ namespace Project.Network
 
             int[] index = new int[inputs];
 
-            for(int i = 0; i < Math.Pow(buckets, inputs); i++)
+            for (int i = 0; i < Math.Pow(buckets, inputs); i++)
             {
                 matchboxes.SetValue(defaultOutput, index);
 
                 index[inputs - 1]++;
 
-                for(int j = inputs - 1; i > 0; j--)
+                for (int j = inputs - 1; j > 0; j--)
                 {
                     if (index[j] == buckets)
                     {
@@ -66,7 +65,7 @@ namespace Project.Network
 
             for (int i = 0; i < outputs; i++)
             {
-                if(selectedOutput < matchbox[i])
+                if (selectedOutput < matchbox[i])
                 {
                     output[i] = 1;
                     return output;
@@ -83,7 +82,7 @@ namespace Project.Network
         {
             int[] index = new int[inputs];
 
-            for(int i = 0; i < inputs; i++)
+            for (int i = 0; i < inputs; i++)
             {
                 index[i] = map(input[i], limits[i][0], limits[i][1], 0, buckets - 1);
             }
@@ -95,7 +94,7 @@ namespace Project.Network
         {
             int[] index = getIndex(input);
             int previousAction = previousOutput.MaximumIndex();
-            
+
             float[] weights = (float[])matchboxes.GetValue(index);
 
             weights[previousAction] += scoreChange;

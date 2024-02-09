@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Distributions;
+﻿using MathNet.Numerics.Distributions;
 
 using Project.Network;
 
