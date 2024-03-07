@@ -1,4 +1,4 @@
-﻿using Games.Pong;
+﻿using Games.FlappyBird;
 using MathNet.Numerics.LinearAlgebra;
 using Project.Network;
 using Project.Network.JSONSerialization;
@@ -41,7 +41,7 @@ namespace Project
             };
 
             //Create matchbox model
-            Matchbox matchbox = new Matchbox(Pong.inputs, Pong.outputs, 5, limits);
+            Matchbox matchbox = new Matchbox(FlappyBird.inputs, FlappyBird.outputs, 5, limits);
 
             //Create the list of angles to test
             float[] angles = new float[numberOfAngles];
@@ -50,67 +50,43 @@ namespace Project
                 angles[i] = ((360f / numberOfAngles) * i) * ((float)Math.PI / 180);
             }
 
-            Pong pongGame = new Pong(500, 500);
+            FlappyBird birdGame = new FlappyBird();
 
             long lastPrintout = 0;
 
             while (totalTicks < 1000000)
             {
-                if(lastPrintout + 100 < totalTicks)
+                float score = 0;
+
+                for (int i = 0; i < angles.Length; i++)
                 {
-                    //Do printout
-                    float score = 0;
+                    birdGame.reset();
 
-                    for (int i = 0; i < angles.Length; i++)
+                    for (int j = 0; j < ticks; j++)
                     {
-                        pongGame.reset(5, angles[i]);
+                        totalTicks++;
 
-                        for (int j = 0; j < ticks; j++)
+                        Vector<float> inputs = birdGame.getInput();
+
+                        Vector<float> outputs = matchbox.evaluateNetwork(inputs);
+
+                        birdGame.setAction(outputs);
+
+                        matchbox.train(inputs, birdGame.getScoreChange());
+
+                        if (!birdGame.tick())
                         {
-                            totalTicks++;
-
-                            Vector<float> inputs = pongGame.getInput();
-
-                            Vector<float> outputs = matchbox.evaluateNetwork(inputs);
-
-                            pongGame.setAction(outputs);
-
-                            matchbox.train(inputs, pongGame.getScoreChange());
-
-                            if (!pongGame.tick())
-                            {
-                                break;
-                            }
+                            break;
                         }
-
-                        score += pongGame.score;
                     }
 
-                    genLogs.WriteLine(totalTicks + "," + score);
-                    Console.WriteLine(totalTicks + "," + score);
-
-                    lastPrintout = totalTicks;
+                    score += birdGame.score;
                 }
 
-                pongGame.reset(5, (float)(random.NextDouble() * 2 * Math.PI));
+                genLogs.WriteLine(totalTicks + "," + score);
+                Console.WriteLine(totalTicks + "," + score);
 
-                for (int i = 0; i < ticks; i++)
-                {
-                    totalTicks++;
-
-                    Vector<float> inputs = pongGame.getInput();
-
-                    Vector<float> outputs = matchbox.evaluateNetwork(inputs);
-
-                    pongGame.setAction(outputs);
-
-                    matchbox.train(inputs, pongGame.getScoreChange());
-
-                    if (!pongGame.tick())
-                    {
-                        break;
-                    }
-                }
+                lastPrintout = totalTicks;
             }
 
             Console.WriteLine(docPath);
