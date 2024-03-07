@@ -16,9 +16,7 @@ namespace Project
             Random random = new Random();
 
             //Settings
-            int ticks = 2000;
-
-            int numberOfAngles = 60;
+            int ticks = 10000;
 
             //Get the current project and append the current time
             string docPath = Environment.CurrentDirectory;
@@ -33,22 +31,14 @@ namespace Project
             //Define limits
             float[][] limits =
             {
-                [0, 500],
-                [0, 500],
-                [-5, 5],
-                [-5, 5],
-                [0, 500]
+                [0, 100],
+                [-15, 15],
+                [0, 50],
+                [0, 100]
             };
 
             //Create matchbox model
             Matchbox matchbox = new Matchbox(FlappyBird.inputs, FlappyBird.outputs, 5, limits);
-
-            //Create the list of angles to test
-            float[] angles = new float[numberOfAngles];
-            for (int i = 0; i < numberOfAngles; i++)
-            {
-                angles[i] = ((360f / numberOfAngles) * i) * ((float)Math.PI / 180);
-            }
 
             FlappyBird birdGame = new FlappyBird();
 
@@ -58,30 +48,27 @@ namespace Project
             {
                 float score = 0;
 
-                for (int i = 0; i < angles.Length; i++)
+                birdGame.reset();
+
+                for (int j = 0; j < ticks; j++)
                 {
-                    birdGame.reset();
+                    totalTicks++;
 
-                    for (int j = 0; j < ticks; j++)
+                    Vector<float> inputs = birdGame.getInput();
+
+                    Vector<float> outputs = matchbox.evaluateNetwork(inputs);
+
+                    birdGame.setAction(outputs);
+
+                    matchbox.train(inputs, birdGame.getScoreChange());
+
+                    if (!birdGame.tick())
                     {
-                        totalTicks++;
-
-                        Vector<float> inputs = birdGame.getInput();
-
-                        Vector<float> outputs = matchbox.evaluateNetwork(inputs);
-
-                        birdGame.setAction(outputs);
-
-                        matchbox.train(inputs, birdGame.getScoreChange());
-
-                        if (!birdGame.tick())
-                        {
-                            break;
-                        }
+                        break;
                     }
-
-                    score += birdGame.score;
                 }
+
+                score += birdGame.score;
 
                 genLogs.WriteLine(totalTicks + "," + score);
                 Console.WriteLine(totalTicks + "," + score);
