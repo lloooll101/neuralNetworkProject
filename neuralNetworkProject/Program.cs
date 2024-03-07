@@ -6,7 +6,7 @@ using System.Threading;
 
 using Project.Network;
 
-using Games.Pong;
+using Games.FlappyBird;
 using Project.Network.JSONSerialization;
 using Trainers.RandomGeneration;
 using Trainers.RandomMutation;
@@ -21,16 +21,14 @@ namespace Project
         {
             //Settings
             int generations = 100;
-            int netsPerGen = 200;
+            int netsPerGen = 50;
 
-            int ticks = 2000;
+            int ticks = 10000;
 
             int layers = 1;
             int nodesPerLayer = 4;
-            int inputs = 5;
-            int outputs = 3;
-
-            int numberOfAngles = 60;
+            int inputs = FlappyBird.inputs;
+            int outputs = FlappyBird.outputs;
 
             //Get the current project and append the current time
             string docPath = Environment.CurrentDirectory;
@@ -52,13 +50,6 @@ namespace Project
             //Create the trainer class
             MutationTrainer trainer = new MutationTrainer();
 
-            //Create the list of angles to test
-            float[] angles = new float[numberOfAngles];
-            for (int i = 0; i < numberOfAngles; i++)
-            {
-                angles[i] = ((360f / numberOfAngles) * i) * ((float)Math.PI / 180);
-            }
-
             Task<float>[] scoresTasks = new Task<float>[netsPerGen];
             float[] scores = new float[netsPerGen];
 
@@ -71,16 +62,13 @@ namespace Project
                 //string genPath = Path.Combine(docPath, "Generation-" + i);
                 //Directory.CreateDirectory(genPath);
 
-                /*//Clear the scores array*/
-                
-
                 for(int j = 0; j < netsPerGen; j++)
                 {
                     //string networkPath = Path.Combine(genPath, "network-" + j);
                     //Directory.CreateDirectory(networkPath);
 
                     //scoresTasks[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    scoresTasks[j] = runNetwork(networks[j], angles, ticks);
+                    scoresTasks[j] = runNetwork(networks[j], ticks);
                 }
 
                 for(int k = 0; k < netsPerGen; k++)
@@ -111,7 +99,7 @@ namespace Project
             NeuralNetwork importedNetwork = NetworkConverter.JsonToNetwork(networkAsString);
 
             //Run the imported network to compare the score
-            Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
+            Console.WriteLine(runNetwork(importedNetwork, ticks));
 
             //Output the document path for ease of navigation
             //Also open up the output folder
@@ -122,92 +110,44 @@ namespace Project
         }
 
         //Run the network against the set of angles, returning the score
-        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks)
+        public static async Task<float> runNetwork(NeuralNetwork network, int ticks)
         {
             return await Task.Run(() => {
 
                 //Keeps track of the total score of the network
                 float score = 0;
-                Pong pongGame = new Pong(500, 500);
+                FlappyBird birdGame = new FlappyBird();
 
-                for (int i = 0; i < angles.Length; i++)
+                for (int i = 0; i < 1; i++)
                 {
-                    pongGame.reset(5, angles[i]);
+                    birdGame.reset();
 
                     for (int j = 0; j < ticks; j++)
                     {
                         totalTicks++;
 
                         //Create the input vector
-                        Vector<float> inputs = pongGame.getInput();
+                        Vector<float> inputs = birdGame.getInput();
 
                         //Evaluate the network
                         Vector<float> outputs = network.evaluateNetwork(inputs);
 
                         //Set the action of the network
-                        pongGame.setAction(outputs);
+                        birdGame.setAction(outputs);
 
                         //Tick the game, and break if the ball falls
-                        if (!pongGame.tick())
+                        if (!birdGame.tick())
                         {
                             break;
                         }
                     }
 
-                    score += pongGame.score;
+                    score += birdGame.score;
                 }
 
                 return score;
 
             });
-            
-        }
-
-        //Run the network, logging every run
-        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks, string path)
-        {
-            StreamWriter networkLog = new StreamWriter(Path.Combine(path, "networkLog.txt"));
-            string gamesPath = Path.Combine(path, "Games");
-            Directory.CreateDirectory(gamesPath);
-
-            //Keeps track of the total score of the network
-            float score = 0;
-
-            for (int i = 0; i < angles.Length; i++)
-            {
-                StreamWriter gameLog = new StreamWriter(Path.Combine(gamesPath, "games-" + i + ".txt"));
-
-                Pong pongGame = new Pong(500, 500);
-
-                pongGame.reset(5, angles[i]);
-
-                for (int j = 0;; j++)
-                {
-                    //Create the input vector
-                    Vector<float> inputs = pongGame.getInput();
-
-                    //Evaluate the network
-                    Vector<float> outputs = network.evaluateNetwork(inputs);
-
-                    //Set the action of the network
-                    pongGame.setAction(outputs);
-
-                    gameLog.WriteLine(pongGame.ball.X + "," + pongGame.ball.Y + "," + pongGame.paddle.X);
-
-                    //Tick the game, and break if the ball falls
-                    if (!pongGame.tick() || j >= ticks)
-                    {
-                        gameLog.Flush();
-                        networkLog.WriteLine("Score: " + Math.Round(pongGame.score, 4) + "\tTicks: " + j);
-                        break;
-                    }
-                }
-                
-                score += pongGame.score;
-            }
-
-            networkLog.Flush();
-            return score;
         }
     }
 }

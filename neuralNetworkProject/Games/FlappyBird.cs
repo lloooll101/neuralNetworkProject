@@ -1,7 +1,7 @@
 ﻿using MathNet.Numerics.Distributions;
 using MathNet.Numerics.LinearAlgebra;
 
-namespace Games.CartPole
+namespace Games.FlappyBird
 {
     class FlappyBird
     {
@@ -9,7 +9,9 @@ namespace Games.CartPole
         public static int outputs = 2;
 
         private const float gravity = 1;
-        private const float flapStrength = 10;
+        private const float flapStrength = 3;
+
+        private const int openingHeight = 4;
 
         private float yPos;
         private float yVel;
@@ -83,17 +85,17 @@ namespace Games.CartPole
                 }
             }
 
-            if (Math.Abs(openingPosition - yPos) < 5)
+            if (Math.Abs(openingPosition - yPos) < openingHeight)
             {
                 scoreChange += 3;
             }
             else
             {
-                if (openingPosition - yPos < -5 && yVel < 0)
+                if (openingPosition - yPos < -openingHeight && yVel < 0)
                 {
                     scoreChange += 1;
                 }
-                else if(openingPosition - yPos > 5 && yVel > 0)
+                else if(openingPosition - yPos > openingHeight && yVel > 0)
                 {
                     scoreChange += 1;
                 }
@@ -111,7 +113,7 @@ namespace Games.CartPole
         //Return represents if the game is still valid
         public bool tick()
         {
-            yVel += gravity;
+            yVel -= gravity;
             yVel += action * flapStrength;
 
             yPos += yVel;
@@ -121,7 +123,7 @@ namespace Games.CartPole
             if(xDistance <= 0)
             {
                 //TODO: Check collision
-                if (Math.Abs(openingPosition - yPos) < 5)
+                if (Math.Abs(openingPosition - yPos) < openingHeight)
                 {
                     survivedCollision = true;
                 }
