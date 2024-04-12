@@ -14,14 +14,11 @@ namespace Games.CartPole
         private const float massRatio = 1;
         private const float strength = 15;
         private const float friction = 0.15f;
-        private const float dt = 0.001f;
+        private const float dt = 0.1f;
 
         //Game end states
         private int XLimit = 100;
         private float angleLimit = 10 * (float)Math.PI / 180;
-
-        //How far to the left or right the cart can move
-        private int XSize;
 
         private float cartX;
         private float cartVelocity;
@@ -32,9 +29,8 @@ namespace Games.CartPole
         private int action;
 
         //Constructor method
-        public CartPole(int XSize)
+        public CartPole()
         {
-            this.XSize = XSize;
             reset(0, 0, 0);
         }
 

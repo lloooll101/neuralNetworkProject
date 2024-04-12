@@ -6,7 +6,7 @@ using System.Threading;
 
 using Project.Network;
 
-using Games.Pong;
+using Games.CartPole;
 using Project.Network.JSONSerialization;
 using Trainers.RandomGeneration;
 using Trainers.RandomMutation;
@@ -20,17 +20,17 @@ namespace Project
         static void Main(string[] args)
         {
             //Settings
-            int generations = 100;
-            int netsPerGen = 200;
+            int generations = 50;
+            int netsPerGen = 50;
 
-            int ticks = 2000;
+            int ticks = 10000;
 
-            int layers = 1;
+            int layers = 2;
             int nodesPerLayer = 4;
-            int inputs = 5;
-            int outputs = 3;
+            int inputs = 4;
+            int outputs = 2;
 
-            int numberOfAngles = 60;
+            int numberOfConditions = 5;
 
             //Get the current project and append the current time
             string docPath = Environment.CurrentDirectory;
@@ -52,11 +52,21 @@ namespace Project
             //Create the trainer class
             MutationTrainer trainer = new MutationTrainer();
 
-            //Create the list of angles to test
-            float[] angles = new float[numberOfAngles];
-            for (int i = 0; i < numberOfAngles; i++)
+            //Create the list of conditions to test
+            float[][] conditions = new float[(int)Math.Pow(numberOfConditions, 3)][];
+            for (int i = 0; i < numberOfConditions; i++)
             {
-                angles[i] = ((360f / numberOfAngles) * i) * ((float)Math.PI / 180);
+               for (int j = 0; j < numberOfConditions; j++)
+               {
+                    for(int k = 0; k < numberOfConditions; k++)
+                    {
+                        float cartVelocity = (float)5 / (numberOfConditions - 1) * i - 2.5f;
+                        float angle = (10 * (float)Math.PI / 180) / (numberOfConditions - 1) * j - (5 * (float)Math.PI / 180);
+                        float angularVelocity = (2 * (float)Math.PI / 180) / (numberOfConditions - 1) * k - (1 * (float)Math.PI / 180);
+                        float[] condition = { cartVelocity, angle, angularVelocity };
+                        conditions[(numberOfConditions * numberOfConditions * i) + (numberOfConditions * j) + k] = condition;
+                    }
+               }
             }
 
             Task<float>[] scoresTasks = new Task<float>[netsPerGen];
@@ -72,15 +82,13 @@ namespace Project
                 //Directory.CreateDirectory(genPath);
 
                 /*//Clear the scores array*/
-                
-
                 for(int j = 0; j < netsPerGen; j++)
                 {
                     //string networkPath = Path.Combine(genPath, "network-" + j);
                     //Directory.CreateDirectory(networkPath);
 
                     //scoresTasks[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    scoresTasks[j] = runNetwork(networks[j], angles, ticks);
+                    scoresTasks[j] = runNetwork(networks[j], conditions, ticks);
                 }
 
                 for(int k = 0; k < netsPerGen; k++)
@@ -102,6 +110,7 @@ namespace Project
             stopwatch.Stop();
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
 
+            /*
             //Convert the top network to a JSON string and output it
             string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
             Console.WriteLine(networkAsString);
@@ -112,102 +121,56 @@ namespace Project
 
             //Run the imported network to compare the score
             Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
+            */
 
             //Output the document path for ease of navigation
             //Also open up the output folder
             Console.WriteLine(docPath);
             Process.Start("explorer.exe", docPath);
-
+            
             genLogs.Flush();
         }
 
         //Run the network against the set of angles, returning the score
-        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks)
+        public static async Task<float> runNetwork(NeuralNetwork network, float[][] conditions, int ticks)
         {
             return await Task.Run(() => {
 
                 //Keeps track of the total score of the network
                 float score = 0;
-                Pong pongGame = new Pong(500, 500);
+                CartPole cartPoleGame = new CartPole();
 
-                for (int i = 0; i < angles.Length; i++)
+                for (int i = 0; i < conditions.Length; i++)
                 {
-                    pongGame.reset(5, angles[i]);
+                    cartPoleGame.reset(conditions[1][0], conditions[1][1], conditions[1][2]);
 
                     for (int j = 0; j < ticks; j++)
                     {
                         totalTicks++;
 
                         //Create the input vector
-                        Vector<float> inputs = pongGame.getInput();
+                        Vector<float> inputs = cartPoleGame.getInput();
 
                         //Evaluate the network
                         Vector<float> outputs = network.evaluateNetwork(inputs);
 
                         //Set the action of the network
-                        pongGame.setAction(outputs);
+                        cartPoleGame.setAction(outputs);
 
                         //Tick the game, and break if the ball falls
-                        if (!pongGame.tick())
+                        if (!cartPoleGame.tick())
                         {
                             break;
                         }
                     }
 
-                    score += pongGame.score;
+                    score += cartPoleGame.score;
                 }
 
                 return score;
 
             });
             
-        }
-
-        //Run the network, logging every run
-        public static async Task<float> runNetwork(NeuralNetwork network, float[] angles, int ticks, string path)
-        {
-            StreamWriter networkLog = new StreamWriter(Path.Combine(path, "networkLog.txt"));
-            string gamesPath = Path.Combine(path, "Games");
-            Directory.CreateDirectory(gamesPath);
-
-            //Keeps track of the total score of the network
-            float score = 0;
-
-            for (int i = 0; i < angles.Length; i++)
-            {
-                StreamWriter gameLog = new StreamWriter(Path.Combine(gamesPath, "games-" + i + ".txt"));
-
-                Pong pongGame = new Pong(500, 500);
-
-                pongGame.reset(5, angles[i]);
-
-                for (int j = 0;; j++)
-                {
-                    //Create the input vector
-                    Vector<float> inputs = pongGame.getInput();
-
-                    //Evaluate the network
-                    Vector<float> outputs = network.evaluateNetwork(inputs);
-
-                    //Set the action of the network
-                    pongGame.setAction(outputs);
-
-                    gameLog.WriteLine(pongGame.ball.X + "," + pongGame.ball.Y + "," + pongGame.paddle.X);
-
-                    //Tick the game, and break if the ball falls
-                    if (!pongGame.tick() || j >= ticks)
-                    {
-                        gameLog.Flush();
-                        networkLog.WriteLine("Score: " + Math.Round(pongGame.score, 4) + "\tTicks: " + j);
-                        break;
-                    }
-                }
-                
-                score += pongGame.score;
-            }
-
-            networkLog.Flush();
-            return score;
         }
     }
 }
