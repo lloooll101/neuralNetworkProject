@@ -1,5 +1,4 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Distributions;
 
 namespace Project.Network
 {
@@ -29,20 +28,20 @@ namespace Project.Network
             int[] dimensions = new int[inputs];
             Array.Fill(dimensions, buckets);
 
-            float[] defaultOutput = new float[outputs];
-            Array.Fill(defaultOutput, 3);
-
             matchboxes = Array.CreateInstance(typeof(float[]), dimensions);
 
             int[] index = new int[inputs];
 
-            for(int i = 0; i < Math.Pow(buckets, inputs); i++)
+            for (int i = 0; i < Math.Pow(buckets, inputs); i++)
             {
+                float[] defaultOutput = new float[outputs];
+                Array.Fill(defaultOutput, 3);
+
                 matchboxes.SetValue(defaultOutput, index);
 
                 index[inputs - 1]++;
 
-                for(int j = inputs - 1; i > 0; j--)
+                for (int j = inputs - 1; j > 0; j--)
                 {
                     if (index[j] == buckets)
                     {
@@ -60,15 +59,18 @@ namespace Project.Network
 
             Vector<float> output = Vector<float>.Build.Dense(outputs);
 
-            float[] matchbox = (float[])matchboxes.GetValue(getIndex(input));
+            int[] index = getIndex(input);
+
+            float[] matchbox = (float[])matchboxes.GetValue(index);
 
             float selectedOutput = (float)random.NextDouble() * matchbox.Sum();
 
             for (int i = 0; i < outputs; i++)
             {
-                if(selectedOutput < matchbox[i])
+                if (selectedOutput < matchbox[i])
                 {
                     output[i] = 1;
+                    previousOutput = output;
                     return output;
                 }
 
@@ -76,6 +78,7 @@ namespace Project.Network
             }
 
             output[outputs - 1] = 1;
+            previousOutput = output;
             return output;
         }
 
@@ -83,7 +86,7 @@ namespace Project.Network
         {
             int[] index = new int[inputs];
 
-            for(int i = 0; i < inputs; i++)
+            for (int i = 0; i < inputs; i++)
             {
                 index[i] = map(input[i], limits[i][0], limits[i][1], 0, buckets - 1);
             }
@@ -95,12 +98,10 @@ namespace Project.Network
         {
             int[] index = getIndex(input);
             int previousAction = previousOutput.MaximumIndex();
-            
+
             float[] weights = (float[])matchboxes.GetValue(index);
 
-            weights[previousAction] += scoreChange;
-
-            weights[previousAction] = Math.Max(weights[previousAction], 1);
+            weights[previousAction] = Math.Max(weights[previousAction] + scoreChange, 1);
 
             matchboxes.SetValue(weights, index);
         }

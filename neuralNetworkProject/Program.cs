@@ -10,6 +10,7 @@ using Games.CartPole;
 using Project.Network.JSONSerialization;
 using Trainers.RandomGeneration;
 using Trainers.RandomMutation;
+using Games.Pong;
 
 namespace Project
 {
@@ -19,16 +20,10 @@ namespace Project
 
         static void Main(string[] args)
         {
+            Random random = new Random();
+
             //Settings
-            int generations = 50;
-            int netsPerGen = 50;
-
             int ticks = 10000;
-
-            int layers = 2;
-            int nodesPerLayer = 4;
-            int inputs = 4;
-            int outputs = 2;
 
             int numberOfConditions = 5;
 
@@ -42,23 +37,13 @@ namespace Project
             //Create the generation logger
             StreamWriter genLogs = new StreamWriter(Path.Combine(docPath, "genLogs.txt"));
 
-            //Create and populate the array of networks
-            NeuralNetwork[] networks = new NeuralNetwork[netsPerGen];
-            for (int i = 0; i < netsPerGen; i++)
-            {
-                networks[i] = new NeuralNetwork(layers, nodesPerLayer, inputs, outputs);
-            }
-
-            //Create the trainer class
-            MutationTrainer trainer = new MutationTrainer();
-
             //Create the list of conditions to test
             float[][] conditions = new float[(int)Math.Pow(numberOfConditions, 3)][];
             for (int i = 0; i < numberOfConditions; i++)
             {
-               for (int j = 0; j < numberOfConditions; j++)
-               {
-                    for(int k = 0; k < numberOfConditions; k++)
+                for (int j = 0; j < numberOfConditions; j++)
+                {
+                    for (int k = 0; k < numberOfConditions; k++)
                     {
                         float cartVelocity = (float)5 / (numberOfConditions - 1) * i - 2.5f;
                         float angle = (10 * (float)Math.PI / 180) / (numberOfConditions - 1) * j - (5 * (float)Math.PI / 180);
@@ -66,79 +51,27 @@ namespace Project
                         float[] condition = { cartVelocity, angle, angularVelocity };
                         conditions[(numberOfConditions * numberOfConditions * i) + (numberOfConditions * j) + k] = condition;
                     }
-               }
+                }
             }
 
-            Task<float>[] scoresTasks = new Task<float>[netsPerGen];
-            float[] scores = new float[netsPerGen];
-
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            //Run each generation
-            for (int i = 0; i < generations; i++)
+            //Define limits
+            float[][] limits =
             {
-                //string genPath = Path.Combine(docPath, "Generation-" + i);
-                //Directory.CreateDirectory(genPath);
+                [-100, 100],
+                [-10, 10],
+                [-10 * (float)Math.PI / 180, 10 * (float)Math.PI / 180],
+                [-5 * (float)Math.PI / 180, 5 * (float)Math.PI / 180]
+            };
 
-                /*//Clear the scores array*/
-                for(int j = 0; j < netsPerGen; j++)
-                {
-                    //string networkPath = Path.Combine(genPath, "network-" + j);
-                    //Directory.CreateDirectory(networkPath);
+            //Create matchbox model
+            Matchbox matchbox = new Matchbox(CartPole.inputs, CartPole.outputs, 5, limits);
 
-                    //scoresTasks[j] = runNetwork(networks[j], angles, ticks, networkPath);
-                    scoresTasks[j] = runNetwork(networks[j], conditions, ticks);
-                }
+            CartPole cartPoleGame = new CartPole();
 
-                for(int k = 0; k < netsPerGen; k++)
-                {
-                    scores[k] = scoresTasks[k].Result;
-
-                }
-
-                //genLogs.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
-                //Console.WriteLine("Generation: " + i + "\tMax Score: " + scores.Max());
-
-                //CSV version
-                genLogs.WriteLine(i + "," + totalTicks + "," + scores.Max());
-                Console.WriteLine(i + "," + totalTicks + "," + scores.Max());
-
-                networks = trainer.generateNextGen(networks, scores, 0.1f, 0.25f);
-            }
-
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-
-            /*
-            //Convert the top network to a JSON string and output it
-            string networkAsString = NetworkConverter.NetworkToJson(networks[0]);
-            Console.WriteLine(networkAsString);
-
-            //Create a new network from the imported JSON
-            //This is curently used to test the import function
-            NeuralNetwork importedNetwork = NetworkConverter.JsonToNetwork(networkAsString);
-
-            //Run the imported network to compare the score
-            Console.WriteLine(runNetwork(importedNetwork, angles, ticks));
-            */
-
-            //Output the document path for ease of navigation
-            //Also open up the output folder
-            Console.WriteLine(docPath);
-            Process.Start("explorer.exe", docPath);
-            
-            genLogs.Flush();
-        }
-
-        //Run the network against the set of angles, returning the score
-        public static async Task<float> runNetwork(NeuralNetwork network, float[][] conditions, int ticks)
-        {
-            return await Task.Run(() => {
-
-                //Keeps track of the total score of the network
+            while (totalTicks < 1000000000)
+            {
+                //Do printout
                 float score = 0;
-                CartPole cartPoleGame = new CartPole();
 
                 for (int i = 0; i < conditions.Length; i++)
                 {
@@ -148,16 +81,14 @@ namespace Project
                     {
                         totalTicks++;
 
-                        //Create the input vector
                         Vector<float> inputs = cartPoleGame.getInput();
 
-                        //Evaluate the network
-                        Vector<float> outputs = network.evaluateNetwork(inputs);
+                        Vector<float> outputs = matchbox.evaluateNetwork(inputs);
 
-                        //Set the action of the network
                         cartPoleGame.setAction(outputs);
 
-                        //Tick the game, and break if the ball falls
+                        matchbox.train(inputs, cartPoleGame.getScoreChange());
+
                         if (!cartPoleGame.tick())
                         {
                             break;
@@ -167,10 +98,16 @@ namespace Project
                     score += cartPoleGame.score;
                 }
 
-                return score;
+                genLogs.WriteLine(totalTicks + "," + score);
+                Console.WriteLine(totalTicks + "," + score);
+            }
 
-            });
-            
+            //Output the document path for ease of navigation
+            //Also open up the output folder
+            Console.WriteLine(docPath);
+            Process.Start("explorer.exe", docPath);
+
+            genLogs.Flush();
         }
     }
 }
