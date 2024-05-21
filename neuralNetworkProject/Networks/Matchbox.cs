@@ -108,10 +108,10 @@ namespace Project.Network
 
         private int map(float input, float inMin, float inMax, float outMin, float outMax)
         {
-            float value = (input - inMin) / (inMax - inMin) * (outMax - outMin) + outMax;
+            float value = (input - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
             return (int)Math.Round(clamp(value, outMin, outMax));
         }
-
+            
         private float clamp(float input, float min, float max)
         {
             return Math.Max(Math.Min(input, max), min);

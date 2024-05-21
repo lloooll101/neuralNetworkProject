@@ -68,7 +68,7 @@ namespace Project
 
             CartPole cartPoleGame = new CartPole();
 
-            while (totalTicks < 1000000000)
+            while (totalTicks < 250000000)
             {
                 //Do printout
                 float score = 0;
